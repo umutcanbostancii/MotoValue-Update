@@ -181,4 +181,113 @@ To run from source:
 # Go >= 1.22
 go run . help
 ```
-# MotoValue-Update
+
+# MotoValue Update
+
+A modern web application for motorcycle value estimation and management, built with React, TypeScript, and Supabase.
+
+## 🚀 Features
+
+- **User Authentication**: Secure login and registration system
+- **Motorcycle Value Calculator**: Advanced algorithm for accurate motorcycle value estimation
+- **Dashboard**: User-friendly interface for managing your motorcycles
+- **History Tracking**: Keep track of all your previous valuations
+- **Admin Panel**: Comprehensive admin interface for system management
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+
+## 🛠️ Tech Stack
+
+- **Frontend**:
+  - React with TypeScript
+  - Tailwind CSS with DaisyUI for styling
+  - Vite for build tooling
+  - Anime.js for animations
+
+- **Backend**:
+  - Supabase for database and authentication
+  - Firebase for additional services
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+- Node.js (v18 or higher)
+- npm or yarn
+- Git
+
+## 🔧 Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/umutcanbostancii/MotoValue-Update.git
+cd MotoValue-Update
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Create a `.env` file in the root directory and add your environment variables:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+4. Start the development server:
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+## 🏗️ Project Structure
+
+```
+src/
+├── components/
+│   ├── auth/          # Authentication components
+│   ├── layout/        # Layout components
+│   └── pages/         # Page components
+├── contexts/          # React contexts
+├── lib/              # Utility functions and configurations
+└── main.tsx         # Application entry point
+```
+
+## 📚 Available Scripts
+
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run preview`: Preview production build
+- `npm run lint`: Run ESLint
+- `npm run type-check`: Run TypeScript type checking
+
+## 🔐 Environment Variables
+
+The following environment variables are required:
+
+- `VITE_SUPABASE_URL`: Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👥 Authors
+
+- **Umutcan Bostanci** - *Initial work* - [umutcanbostancii](https://github.com/umutcanbostancii)
+
+## 🙏 Acknowledgments
+
+- Thanks to all contributors who have helped shape MotoValue
+- Supabase team for their excellent backend-as-a-service
+- React and TypeScript communities for their amazing tools
