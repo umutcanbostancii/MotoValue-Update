@@ -1,10 +1,28 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './lib/routes';
+import { ThemeProvider } from './contexts/ThemeContext';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
+function Root() {
+  return (
+    <ThemeProvider>
+      <RouterProvider router={router} />
+    </ThemeProvider>
+  );
+}
+
+// Ensure the root element exists
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  const root = document.createElement('div');
+  root.id = 'root';
+  document.body.appendChild(root);
+}
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Root />
+  </React.StrictMode>
 );

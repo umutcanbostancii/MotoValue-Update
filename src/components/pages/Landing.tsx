@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bike, Calculator, Shield, TrendingUp } from 'lucide-react';
+import { Bike, Calculator, Shield, TrendingUp, Users, MessageSquare, Brain, Building } from 'lucide-react';
 
 const features = [
   {
@@ -20,11 +20,36 @@ const features = [
   }
 ];
 
+const stats = [
+  { value: '123+', label: 'Aktif Galeri', icon: Building },
+  { value: '5000+', label: 'Aylık İşlem', icon: TrendingUp },
+  { value: '15K+', label: 'Kayıtlı Kullanıcı', icon: Users },
+  { value: '98%', label: 'Müşteri Memnuniyeti', icon: MessageSquare }
+];
+
+const aiFeatures = [
+  {
+    title: 'Yapay Zeka Destekli Fiyatlama',
+    description: 'Gelişmiş makine öğrenmesi algoritmaları ile anlık ve doğru fiyat tahminleri',
+    icon: Brain
+  },
+  {
+    title: 'Akıllı Eşleştirme',
+    description: 'Alıcı ve satıcıları otomatik olarak eşleştiren yapay zeka sistemi',
+    icon: Users
+  },
+  {
+    title: 'Piyasa Trend Analizi',
+    description: 'Gelecek fiyat tahminleri ve piyasa trend analizleri',
+    icon: TrendingUp
+  }
+];
+
 export function Landing() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar */}
-      <nav className="bg-white border-b">
+      <nav className="bg-white border-b relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -33,16 +58,10 @@ export function Landing() {
             </div>
             <div className="flex items-center space-x-4">
               <Link
-                to="/auth/register"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Bayi Kaydı
-              </Link>
-              <Link
-                to="/auth/login"
+                to="/dashboard"
                 className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
               >
-                Giriş Yap
+                Panele Git
               </Link>
             </div>
           </div>
@@ -50,35 +69,36 @@ export function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <div className="relative bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:pb-28 xl:pb-32">
-            <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-              <div className="sm:text-center lg:text-left">
-                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+      <div className="relative bg-white h-[calc(100vh-4rem)]">
+        <div className="absolute inset-0">
+          <img
+            className="w-full h-full object-cover"
+            src="https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&q=80&w=2070&h=1000"
+            alt="Sport Motorcycle"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black to-transparent opacity-75"></div>
+        </div>
+        
+        <div className="relative h-full max-w-7xl mx-auto">
+          <div className="relative h-full flex items-center z-10">
+            <main className="w-full">
+              <div className="sm:text-left lg:text-left lg:w-1/2 px-4 sm:px-6 lg:px-8">
+                <h1 className="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl">
                   <span className="block">Motosikletinizin</span>
-                  <span className="block text-indigo-600">Gerçek Değerini Öğrenin</span>
+                  <span className="block text-indigo-400">Gerçek Değerini Öğrenin</span>
                 </h1>
-                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                <p className="mt-3 text-base text-gray-300 sm:mt-5 sm:text-lg sm:max-w-xl md:mt-5 md:text-xl">
                   MotoValue, Türkiye'nin en kapsamlı motosiklet değerleme platformu. 
                   Gelişmiş algoritması ve geniş veri tabanı ile motosikletinizin 
                   gerçek piyasa değerini saniyeler içinde öğrenin.
                 </p>
-                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                <div className="mt-5 sm:mt-8 sm:flex sm:justify-start">
                   <div className="rounded-md shadow">
                     <Link
-                      to="/auth/register"
+                      to="/dashboard"
                       className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
                     >
                       Hemen Başlayın
-                    </Link>
-                  </div>
-                  <div className="mt-3 sm:mt-0 sm:ml-3">
-                    <Link
-                      to="/guide"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10"
-                    >
-                      Nasıl Çalışır?
                     </Link>
                   </div>
                 </div>
@@ -88,8 +108,23 @@ export function Landing() {
         </div>
       </div>
 
+      {/* Stats Section */}
+      <div className="bg-indigo-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            {stats.map((stat) => (
+              <div key={stat.label} className="bg-white p-6 rounded-lg shadow-sm text-center">
+                <stat.icon className="h-8 w-8 mx-auto text-indigo-600 mb-4" />
+                <p className="text-3xl font-bold text-indigo-600">{stat.value}</p>
+                <p className="text-gray-600 mt-2">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Features Section */}
-      <div className="py-12 bg-gray-50">
+      <div className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lg:text-center">
             <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">

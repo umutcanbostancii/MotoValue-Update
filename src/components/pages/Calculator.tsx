@@ -1,14 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Calculator as CalcIcon, AlertCircle } from 'lucide-react';
-import useAuth from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import type {
-  MotorcycleCondition,
-  TechnicalSpecs,
-  SafetyFeatures,
-  Accessories,
-  DamageReport
-} from '../../lib/types';
 
 interface Motorcycle {
   id: string;
@@ -24,7 +16,6 @@ interface Motorcycle {
 }
 
 export function Calculator() {
-  const { user } = useAuth();
   const [motorcycles, setMotorcycles] = useState<Motorcycle[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
@@ -34,24 +25,13 @@ export function Calculator() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      fetchMotorcycles();
-    }
-  }, [user]);
+    fetchMotorcycles();
+  }, []);
 
   const fetchMotorcycles = async () => {
     try {
       setLoading(true);
       setError(null);
-
-      // Supabase bağlantısını kontrol et
-      if (!supabase) {
-        throw new Error('Supabase client is not initialized');
-      }
-
-      // Debug için
-      console.log('Fetching motorcycles with user:', user?.uid);
-      console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
 
       const { data, error: fetchError } = await supabase
         .from('motorcycles')
@@ -66,9 +46,6 @@ export function Calculator() {
       if (!data) {
         throw new Error('No data returned from Supabase');
       }
-
-      // Debug için
-      console.log('Fetched motorcycles:', data);
 
       setMotorcycles(data);
       const uniqueBrands = Array.from(new Set(data.map(m => m.brand))).sort();
@@ -96,27 +73,22 @@ export function Calculator() {
     setSelectedModel(model);
   };
 
-  if (!user) {
-    return (
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-yellow-50 dark:bg-yellow-900/50 border border-yellow-200 dark:border-yellow-800 text-yellow-600 dark:text-yellow-400 p-4 rounded-lg">
-          <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 mr-2" />
-            <p>Bu sayfayı görüntülemek için giriş yapmanız gerekmektedir.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto p-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center space-x-3 mb-6">
           <CalcIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Motosiklet Değer Hesaplama
           </h2>
+        </div>
+
+        <div className="prose dark:prose-invert max-w-none mb-8">
+          <p>
+            Motosikletinizin güncel piyasa değerini hesaplamak için lütfen marka ve modelini seçin.
+            Sistemimiz, seçtiğiniz motosikletin özelliklerini ve piyasa verilerini analiz ederek
+            size en doğru değerlemeyi sunacaktır.
+          </p>
         </div>
 
         {loading && (
@@ -142,16 +114,16 @@ export function Calculator() {
         )}
 
         {!loading && !error && motorcycles.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <label htmlFor="brand" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label htmlFor="brand" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Marka
               </label>
               <select
                 id="brand"
                 value={selectedBrand}
                 onChange={(e) => handleBrandChange(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 dark:text-white"
               >
                 <option value="">Marka Seçin</option>
                 {brands.map((brand) => (
@@ -164,14 +136,14 @@ export function Calculator() {
 
             {selectedBrand && (
               <div>
-                <label htmlFor="model" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label htmlFor="model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Model
                 </label>
                 <select
                   id="model"
                   value={selectedModel}
                   onChange={(e) => handleModelChange(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900 dark:text-white"
                 >
                   <option value="">Model Seçin</option>
                   {models.map((model) => (
@@ -180,6 +152,16 @@ export function Calculator() {
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {selectedBrand && selectedModel && (
+              <div className="mt-8">
+                <button
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  Değer Hesapla
+                </button>
               </div>
             )}
           </div>

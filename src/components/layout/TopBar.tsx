@@ -1,8 +1,7 @@
 import React from 'react';
 import { Bell, User, LogOut } from 'lucide-react';
-import useAuth from '../../contexts/AuthContext';
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface Notification {
   message: string;
@@ -10,16 +9,12 @@ interface Notification {
 }
 
 export function TopBar() {
-  const { user, signOut } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error('Çıkış yapılırken hata oluştu:', error);
-    }
+  const handleSignOut = () => {
+    navigate('/');
   };
 
   return (
@@ -76,7 +71,7 @@ export function TopBar() {
             <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50">
               <User className="h-6 w-6 text-gray-400 dark:text-gray-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {user?.email}
+                Test Kullanıcı
               </span>
             </button>
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 hidden group-hover:block z-50">

@@ -1,8 +1,6 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
 import { Landing } from '../components/pages/Landing';
-import { LoginPage } from '../components/auth/LoginPage';
-import { RegisterPage } from '../components/auth/RegisterPage';
 import { Dashboard } from '../components/pages/Dashboard';
 import { Calculator } from '../components/pages/Calculator';
 import { History } from '../components/pages/History';
@@ -13,6 +11,10 @@ import { Admin } from '../components/pages/Admin';
 export const router = createBrowserRouter([
   {
     path: '/',
+    element: <Landing />,
+  },
+  {
+    path: '/dashboard',
     element: <Layout />,
     children: [
       {
@@ -42,15 +44,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/landing',
-    element: <Landing />,
-  },
-  {
-    path: '/auth/login',
-    element: <LoginPage />,
-  },
-  {
-    path: '/auth/register',
-    element: <RegisterPage />,
+    path: '*',
+    element: <Navigate to="/" replace />,
   },
 ]);
