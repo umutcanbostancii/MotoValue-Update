@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (supabaseUser) {
         try {
           const role = await getUserRole(supabaseUser.id);
+          console.log('User role:', role);
           
           setUser({
             id: supabaseUser.id,
@@ -52,7 +53,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('Attempting sign in for:', email);
       const user = await supabaseSignIn(email, password);
-      console.log('Sign in successful');
+      console.log('Sign in successful:', user);
       return user;
     } catch (error) {
       console.error('Sign in error:', error);
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('Attempting sign up for:', email);
       const user = await supabaseSignUp(email, password);
-      console.log('Sign up successful');
+      console.log('Sign up successful:', user);
       return user;
     } catch (error) {
       console.error('Sign up error:', error);

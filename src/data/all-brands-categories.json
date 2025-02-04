@@ -1,0 +1,1475 @@
+[
+    {
+      "category": "ADVENTURE",
+      "products": [
+        {
+          "name": "CRF250L",
+          "year": null,
+          "price": "241.000 ₺"
+        },
+        {
+          "name": "CRF250 Rally",
+          "year": null,
+          "price": "267.000 ₺"
+        },
+        {
+          "name": "NC750X",
+          "year": null,
+          "price": "516.500 ₺"
+        },
+        {
+          "name": "NC750X - DCT",
+          "year": null,
+          "price": "556.750 ₺"
+        },
+        {
+          "name": "Transalp",
+          "year": null,
+          "price": "620.500 ₺"
+        },
+        {
+          "name": "X-ADV",
+          "year": null,
+          "price": "745.500 ₺"
+        },
+        {
+          "name": "Africa Twin",
+          "year": null,
+          "price": "773.000 ₺"
+        },
+        {
+          "name": "Africa Twin (ES) - DCT",
+          "year": null,
+          "price": "924.500 ₺"
+        },
+        {
+          "name": "Africa Twin Adventure Sports (ES) - DCT",
+          "year": null,
+          "price": "952.250 ₺"
+        },
+        {
+          "name": "Africa Twin Adventure Sports (ES) - DCT",
+          "year": null,
+          "price": "1.022.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "DUCATI - Desert X",
+      "products": [
+        {
+          "name": "DesertX (White Livery)",
+          "year": 2024,
+          "price": "821.400 ₺"
+        },
+        {
+          "name": "DesertX (Black Livery)",
+          "year": 2024,
+          "price": "855.070 ₺"
+        },
+        {
+          "name": "DesertX Rally (White Livery)",
+          "year": 2024,
+          "price": "1.064.860 ₺"
+        }
+      ]
+    },
+    {
+      "category": "DUCATI - Diavel V4 / X Diavel",
+      "products": [
+        {
+          "name": "DIAVEL V4 (RED )",
+          "year": 2024,
+          "price": "1.333.480 ₺"
+        },
+        {
+          "name": "DIAVEL V4 (BLACK)",
+          "year": 2024,
+          "price": "1.350.130 ₺"
+        }
+      ]
+    },
+    {
+      "category": "DUCATI - Monster",
+      "products": [
+        {
+          "name": "Monster (Ducati Red)",
+          "year": 2024,
+          "price": "565.730 ₺"
+        },
+        {
+          "name": "Monster (Iceberg White / Aviator Grey)",
+          "year": 2024,
+          "price": "577.200 ₺"
+        },
+        {
+          "name": "Monster Plus (Livery)",
+          "year": 2024,
+          "price": "605.520 ₺"
+        },
+        {
+          "name": "Monster SP (Livery)",
+          "year": 2024,
+          "price": "709.660 ₺"
+        },
+        {
+          "name": "Monster 30° Anniversario (Livery)",
+          "year": 2024,
+          "price": "846.190 ₺"
+        }
+      ]
+    },
+    {
+      "category": "DUCATI - Multistrada",
+      "products": [
+        {
+          "name": "Multistrada V2 (Ducati Red)",
+          "year": 2024,
+          "price": "586.900 ₺"
+        },
+        {
+          "name": "Multistrada V2 S (Ducati Red)",
+          "year": 2024,
+          "price": "733.900 ₺"
+        },
+        {
+          "name": "Multistrada V2 S (Thrilling Black Livery)",
+          "year": 2024,
+          "price": "754.900 ₺"
+        },
+        {
+          "name": "Multistrada V4 (Ducati Red)",
+          "year": 2024,
+          "price": "1.034.890 ₺"
+        },
+        {
+          "name": "Multistrada V4 S (Ducati Red)",
+          "year": 2024,
+          "price": "1.198.060 ₺"
+        },
+        {
+          "name": "Multistrada V4 S (Radar | Aviator Grey + Iceberg White +36,990 TL)",
+          "year": 2024,
+          "price": "1.215.820 ₺"
+        },
+        {
+          "name": "Multistrada V4 S (Radar)",
+          "year": 2024,
+          "price": "1.248.380 ₺"
+        },
+        {
+          "name": "Multistrada V4 S (Radar | Aviator Grey + Iceberg White +36,990 TL)",
+          "year": 2024,
+          "price": "1.263.550 ₺"
+        },
+        {
+          "name": "Multistrada V4 S Travel (Ducati Red) + Spoke Wheels +36,990 TL",
+          "year": 2024,
+          "price": "1.322.010 ₺"
+        },
+        {
+          "name": "Multistrada V4 S Travel + Radar",
+          "year": 2024,
+          "price": "1.337.180 ₺"
+        },
+        {
+          "name": "Multistrada V4 S Full (Ducati Red) + Spoke Wheels +36,990 TL",
+          "year": 2024,
+          "price": "1.391.200 ₺"
+        },
+        {
+          "name": "Multistrada V4 S Full (Aviator Grey + Iceberg White +36,990 TL)",
+          "year": 2024,
+          "price": "1.406.370 ₺"
+        },
+        {
+          "name": "Multistrada V4 S Grand Tour (Livery)",
+          "year": 2024,
+          "price": "1.374.920 ₺"
+        },
+        {
+          "name": "Multistrada V4 S (Livery)",
+          "year": 2024,
+          "price": "1.402.300 ₺"
+        },
+        {
+          "name": "Multistrada V4 Rally (Red)",
+          "year": 2024,
+          "price": "1.459.650 ₺"
+        },
+        {
+          "name": "Multistrada V4 Rally (Aviator Grey)",
+          "year": 2024,
+          "price": "1.489.990 ₺"
+        },
+        {
+          "name": "Multistrada V4 Rally Full & Adventure (Red)",
+          "year": 2024,
+          "price": "1.529.950 ₺"
+        },
+        {
+          "name": "Multistrada V4 Rally Full & Adventure (Black)",
+          "year": 2024,
+          "price": "1.561.770 ₺"
+        },
+        {
+          "name": "Multistrada V4 S (Radar | Spoke Wheels +36,990 TL)",
+          "year": 2024,
+          "price": "1.383.060 ₺"
+        },
+        {
+          "name": "Multistrada V4 RS (Livery)",
+          "year": 2024,
+          "price": "1.923.370 ₺"
+        },
+        {
+          "name": "Multistrada V4 S Pikes Peak Radar (Livery)",
+          "year": 2024,
+          "price": "1.571.760 ₺"
+        }
+      ]
+    },
+    {
+      "category": "DUCATI - Panigale Superbike",
+      "products": [
+        {
+          "name": "Panigale V2 (Ducati Red , Black on Black Livery )",
+          "year": 2024,
+          "price": "1.091.500 ₺"
+        },
+        {
+          "name": "Panigale V2_Bayliss 1st Championship 20th Anniversary (Livery)",
+          "year": 2024,
+          "price": "1.238.390 ₺"
+        },
+        {
+          "name": "Panigale V4 (Ducati Red )",
+          "year": 2024,
+          "price": "1.343.840 ₺"
+        },
+        {
+          "name": "Panigale V4 S (Ducati Red )",
+          "year": 2024,
+          "price": "1.654.640 ₺"
+        },
+        {
+          "name": "Panigale V4 R",
+          "year": 2024,
+          "price": "2.268.270 ₺"
+        },
+        {
+          "name": "Panigale V4 S 30° Anniversario 916 (Livery)",
+          "year": 2024,
+          "price": "2.268.470 ₺"
+        }
+      ]
+    },
+    {
+      "category": "DUCATI - Scrambler",
+      "products": [
+        {
+          "name": "Scrambler ICON (2G) Red-Yellow-Black",
+          "year": 2024,
+          "price": "563.880 ₺"
+        },
+        {
+          "name": "Scrambler NightShift (2G) Nebula Blue",
+          "year": 2024,
+          "price": "626.780 ₺"
+        },
+        {
+          "name": "Scrambler Full Throttle (2G) Rosso GP19/Black",
+          "year": 2024,
+          "price": "626.780 ₺"
+        }
+      ]
+    },
+    {
+      "category": "DUCATI - StreetFighter",
+      "products": [
+        {
+          "name": "Streetfighter V2 (Ducati Red)",
+          "year": 2024,
+          "price": "911.680 ₺"
+        },
+        {
+          "name": "Streetfighter V2 (Storm Green)",
+          "year": 2024,
+          "price": "929.810 ₺"
+        },
+        {
+          "name": "Streetfighter V4 (Ducati Red)",
+          "year": 2024,
+          "price": "1.193.250 ₺"
+        },
+        {
+          "name": "Streetfighter V4 S (Ducati Red)",
+          "year": 2024,
+          "price": "1.360.490 ₺"
+        },
+        {
+          "name": "Streetfighter V4 S (Grey / Black )",
+          "year": 2024,
+          "price": "1.375.660 ₺"
+        },
+        {
+          "name": "Streetfighter V4 SP 2 (Black Livery)",
+          "year": 2024,
+          "price": "1.890.330 ₺"
+        }
+      ]
+    },
+    {
+      "category": "ELECTRIC MOTION",
+      "products": [
+        {
+          "name": "Escape XR (Homologated)_2024 Model",
+          "year": 2024,
+          "price": "536.900 ₺",
+          "color": "Blue / Grey"
+        },
+        {
+          "name": "E-Pure Race (Non-Homologated)_2023 Model",
+          "year": 2023,
+          "price": "414.900 ₺",
+          "color": "Blue / Grey"
+        }
+      ]
+    },
+    {
+      "category": "FANTIC - Enduro",
+      "products": [
+        {
+          "name": "XE 125 ENDURO 2T",
+          "year": 2024,
+          "price": "439.205 ₺",
+          "color": "White"
+        },
+        {
+          "name": "XEF 250 Enduro Trail 4T",
+          "year": 2024,
+          "price": "180.000 ₺",
+          "color": "White & Black"
+        }
+      ]
+    },
+    {
+      "category": "FANTIC - Off-Road",
+      "products": [
+        {
+          "name": "XEF 250 4T",
+          "year": 2024,
+          "price": "485.614 ₺",
+          "color": "White"
+        },
+        {
+          "name": "XEF 450 4T",
+          "year": 2024,
+          "price": "701.599 ₺",
+          "color": "White"
+        },
+        {
+          "name": "XEF 450 RALLY 4T",
+          "year": 2024,
+          "price": "974.176 ₺",
+          "color": "Livery"
+        }
+      ]
+    },
+    {
+      "category": "FANTIC - Scrambler",
+      "products": [
+        {
+          "name": "CABALLERO 500 Flat Track",
+          "year": 2024,
+          "price": "279.900 ₺",
+          "color": "Grey"
+        },
+        {
+          "name": "CABALLERO 500 Scrambler",
+          "year": 2024,
+          "price": "250.000 ₺",
+          "color": "Red"
+        },
+        {
+          "name": "CABALLERO 500 Deluxe",
+          "year": 2024,
+          "price": "361.805 ₺",
+          "color": "Grey"
+        },
+        {
+          "name": "CABALLERO 500 Anniversary",
+          "year": 2024,
+          "price": "285.900 ₺",
+          "color": "Blue"
+        },
+        {
+          "name": "CABALLERO 500 Rally",
+          "year": 2024,
+          "price": "280.000 ₺",
+          "color": "Green & Sandy"
+        },
+        {
+          "name": "CABALLERO 500 Explorer",
+          "year": 2024,
+          "price": "295.000 ₺",
+          "color": "White & Brown"
+        }
+      ]
+    },
+    {
+      "category": "ITALJET - Dragster",
+      "products": [
+        {
+          "name": "Dragster 200 ABS_2023 Model",
+          "year": 2023,
+          "price": "224.900 ₺"
+        },
+        {
+          "name": "Dragster 300 ABS_2024 Model",
+          "year": 2024,
+          "price": "319.900 ₺",
+          "color_options": "Black/(Red Frame), Yellow/White(Yellow Frame)"
+        },
+        {
+          "name": "Dragster 300 ABS_2024 Model (Malossi Graphics)",
+          "year": 2024,
+          "price": "329.900 ₺"
+        }
+      ]
+    },
+    {
+      "category": "KAMAX",
+      "products": [
+        {
+          "name": "Cup Pro 125cc ABS_2024 Model",
+          "year": 2024,
+          "price": "114.900 ₺",
+          "color_options": "Cream Yellow, Cement Grey, Obsidian Black, Seaweed Green",
+          "kampanya_price": "129.900 ₺ (Kredi Kartına 6 Taksitli Fiyat) ₺"
+        }
+      ]
+    },
+    {
+      "category": "KTM - Cadde",
+      "products": [
+        {
+          "name": "RC 125",
+          "year": 2024,
+          "price": "298.900 ₺",
+          "kampanya_price": "195.000 ₺"
+        },
+        {
+          "name": "RC 390",
+          "year": 2024,
+          "price": "406.900 ₺",
+          "kampanya_price": "269.000 ₺"
+        },
+        {
+          "name": "125 DUKE",
+          "year": 2024,
+          "price": "270.900 ₺"
+        },
+        {
+          "name": "250 DUKE",
+          "year": 2024,
+          "price": "248.900 ₺"
+        },
+        {
+          "name": "390 DUKE",
+          "year": 2024,
+          "price": "370.500 ₺"
+        },
+        {
+          "name": "690 SMC R",
+          "year": 2024,
+          "price": "654.500 ₺"
+        },
+        {
+          "name": "690 ENDURO R",
+          "year": 2024,
+          "price": "654.500 ₺"
+        },
+        {
+          "name": "790 DUKE",
+          "year": 2024,
+          "price": "554.400 ₺"
+        },
+        {
+          "name": "990 DUKE",
+          "year": 2024,
+          "price": "750.800 ₺"
+        },
+        {
+          "name": "890 SMT",
+          "year": 2024,
+          "price": "769.700 ₺"
+        },
+        {
+          "name": "1390 SUPERDUKE R",
+          "year": 2024,
+          "price": "1.116.500 ₺"
+        },
+        {
+          "name": "1390 SUPERDUKE EVO",
+          "year": 2024,
+          "price": "1.193.500 ₺"
+        },
+        {
+          "name": "1290 SUPERDUKE GT",
+          "year": 2024,
+          "price": "1.139.600 ₺"
+        },
+        {
+          "name": "250 ADVENTURE",
+          "year": 2024,
+          "price": "296.900 ₺"
+        },
+        {
+          "name": "390 ADVENTURE",
+          "year": 2024,
+          "price": "408.900 ₺"
+        },
+        {
+          "name": "390 ADVENTURE SW",
+          "year": 2024,
+          "price": "431.900 ₺"
+        },
+        {
+          "name": "790 ADVENTURE",
+          "year": 2024,
+          "price": "662.200 ₺"
+        },
+        {
+          "name": "890 ADVENTURE",
+          "year": 2024,
+          "price": "779.700 ₺"
+        },
+        {
+          "name": "890 ADVENTURE R",
+          "year": 2024,
+          "price": "843.200 ₺"
+        },
+        {
+          "name": "1290 SUPER ADVENTURE S",
+          "year": 2024,
+          "price": "1.097.300 ₺"
+        },
+        {
+          "name": "1290 SUPER ADVENTURE R",
+          "year": 2024,
+          "price": "1.116.500 ₺"
+        }
+      ]
+    },
+    {
+      "category": "KTM - Enduro",
+      "products": [
+        {
+          "name": "150 EXC TPI",
+          "year": 2025,
+          "price": "433.200 ₺"
+        },
+        {
+          "name": "250 EXC TPI",
+          "year": 2025,
+          "price": "477.400 ₺"
+        },
+        {
+          "name": "250 EXC TPI SIXDAYS",
+          "year": 2025,
+          "price": "506.300 ₺"
+        },
+        {
+          "name": "250 EXC F",
+          "year": 2025,
+          "price": "510.200 ₺"
+        },
+        {
+          "name": "250 EXC F SIXDAYS",
+          "year": 2025,
+          "price": "542.900 ₺"
+        },
+        {
+          "name": "300 EXC TPI",
+          "year": 2025,
+          "price": "610.300 ₺"
+        },
+        {
+          "name": "300 EXC TPI SIXDAYS",
+          "year": 2025,
+          "price": "654.500 ₺"
+        },
+        {
+          "name": "350 EXC F",
+          "year": 2025,
+          "price": "650.700 ₺"
+        },
+        {
+          "name": "350 EXC F SIXDAYS",
+          "year": 2025,
+          "price": "687.300 ₺"
+        },
+        {
+          "name": "450 EXC",
+          "year": 2025,
+          "price": "662.200 ₺"
+        },
+        {
+          "name": "450 EXC SIX DAYS",
+          "year": 2025,
+          "price": "702.700 ₺"
+        },
+        {
+          "name": "500 EXC",
+          "year": 2025,
+          "price": "677.600 ₺"
+        },
+        {
+          "name": "500 EXC SIX DAYS",
+          "year": 2025,
+          "price": "712.300 ₺"
+        }
+      ]
+    },
+    {
+      "category": "KTM - Motocross",
+      "products": [
+        {
+          "name": "50 SX",
+          "year": 2024,
+          "price": "221.400 ₺"
+        },
+        {
+          "name": "65 SX",
+          "year": 2024,
+          "price": "265.700 ₺"
+        },
+        {
+          "name": "85 SX 19/16",
+          "year": 2024,
+          "price": "317.700 ₺"
+        },
+        {
+          "name": "250 SX-F",
+          "year": 2024,
+          "price": "490.900 ₺"
+        },
+        {
+          "name": "350 SX-F",
+          "year": 2024,
+          "price": "635.300 ₺"
+        },
+        {
+          "name": "450 SX-F",
+          "year": 2024,
+          "price": "654.500 ₺"
+        }
+      ]
+    },
+    {
+      "category": "MOTO MORINI - Adventure",
+      "products": [
+        {
+          "name": "X Cape 650 Black Rim",
+          "year": null,
+          "price": "404.900 ₺",
+          "color_options": "Monte Bianco White, Carrare Grey, Dolomites Red",
+          "kampanya_price": "431.300 ₺ (Kredi Kartına 6 Taksit) ₺"
+        },
+        {
+          "name": "X Cape 650 Alloy Rim",
+          "year": null,
+          "price": "384.900 ₺",
+          "color_options": "Monte Bianco White, Carrare Grey, Dolomites Red",
+          "kampanya_price": "410.000 ₺ (Kredi Kartına 6 Taksit) ₺"
+        }
+      ]
+    },
+    {
+      "category": "MOTO MORINI - Scrambler",
+      "products": [
+        {
+          "name": "Seimmezzo SCR Version",
+          "year": null,
+          "price": "319.900 ₺",
+          "color_options": "Matt Green, Indigo Blue, Graphite Black",
+          "kampanya_price": "340.700 ₺ (Kredi Kartına 6 Taksit) ₺"
+        }
+      ]
+    },
+    {
+      "category": "NAKED",
+      "products": [
+        {
+          "name": "CB125F",
+          "year": null,
+          "price": "113.250 ₺"
+        },
+        {
+          "name": "Monkey",
+          "year": null,
+          "price": "198.500 ₺"
+        },
+        {
+          "name": "CB250R",
+          "year": null,
+          "price": "243.750 ₺"
+        },
+        {
+          "name": "CL250",
+          "year": null,
+          "price": "254.250 ₺"
+        },
+        {
+          "name": "Hornet",
+          "year": null,
+          "price": "457.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "ROYAL ALLOY",
+      "products": [
+        {
+          "name": "GP 300S LC ABS_Liquid Cooled (Model Yılı 2023)",
+          "year": 2023,
+          "price": "234.900 ₺"
+        },
+        {
+          "name": "TG300S LC ABS_Liquid Cooled (Model Yılı 2023)",
+          "year": 2023,
+          "price": "254.900 ₺"
+        }
+      ]
+    },
+    {
+      "category": "SCOOTER",
+      "products": [
+        {
+          "name": "Dio",
+          "year": null,
+          "price": "109.751 ₺"
+        },
+        {
+          "name": "EM1 e:",
+          "year": null,
+          "price": "113.250 ₺"
+        },
+        {
+          "name": "Activa 125",
+          "year": null,
+          "price": "116.750 ₺"
+        },
+        {
+          "name": "PCX125",
+          "year": null,
+          "price": "155.750 ₺"
+        },
+        {
+          "name": "Honda SH125i",
+          "year": null,
+          "price": "166.500 ₺"
+        },
+        {
+          "name": "Yeni Forza 250",
+          "year": null,
+          "price": "267.500 ₺"
+        },
+        {
+          "name": "Yeni Forza 250 - Çantalı",
+          "year": null,
+          "price": "266.500 ₺"
+        },
+        {
+          "name": "Yeni Forza 250 SE - Çantalı",
+          "year": null,
+          "price": "291.500 ₺"
+        },
+        {
+          "name": "ADV350",
+          "year": null,
+          "price": "386.750 ₺"
+        },
+        {
+          "name": "Forza 750",
+          "year": null,
+          "price": "689.500 ₺"
+        }
+      ]
+    },
+    {
+      "category": "SUPERSPORT",
+      "products": [
+        {
+          "name": "CBR1000RR-R Fireblade SP",
+          "year": null,
+          "price": "1.621.250 ₺"
+        }
+      ]
+    },
+    {
+      "category": "SUZUKI",
+      "products": [
+        {
+          "name": "GSX 1300R Hayabusa",
+          "year": null,
+          "price": "1.149.000 ₺",
+          "price_2023": null,
+          "price_2024": "1.149.000 ₺"
+        },
+        {
+          "name": "GSX-S1000GX",
+          "year": null,
+          "price": "799.000 ₺",
+          "price_2023": null,
+          "price_2024": "799.000 ₺"
+        },
+        {
+          "name": "GSX-S1000GT",
+          "year": null,
+          "price": "705.000 ₺",
+          "price_2023": null,
+          "price_2024": "705.000 ₺"
+        },
+        {
+          "name": "GSX-S1000",
+          "year": null,
+          "price": "694.000 ₺",
+          "price_2023": null,
+          "price_2024": "694.000 ₺"
+        },
+        {
+          "name": "GSX-8R",
+          "year": null,
+          "price": "524.000 ₺",
+          "price_2023": null,
+          "price_2024": "524.000 ₺"
+        },
+        {
+          "name": "GSX-8S",
+          "year": null,
+          "price": "474.000 ₺",
+          "price_2023": null,
+          "price_2024": "474.000 ₺"
+        },
+        {
+          "name": "GSX-S125",
+          "year": null,
+          "price": "212.000 ₺",
+          "price_2023": null,
+          "price_2024": "212.000 ₺"
+        },
+        {
+          "name": "GSX-R125",
+          "year": null,
+          "price": "212.000 ₺",
+          "price_2023": null,
+          "price_2024": "212.000 ₺"
+        },
+        {
+          "name": "V-Strom 1050 DE",
+          "year": null,
+          "price": "766.000 ₺",
+          "price_2023": "713.000 ₺",
+          "price_2024": "766.000 ₺"
+        },
+        {
+          "name": "V-Strom 800 DE",
+          "year": null,
+          "price": "650.000 ₺",
+          "price_2023": "519.000 ₺",
+          "price_2024": "650.000 ₺"
+        },
+        {
+          "name": "V-Strom 800",
+          "year": null,
+          "price": "609.000 ₺",
+          "price_2023": null,
+          "price_2024": "609.000 ₺"
+        },
+        {
+          "name": "Burgman 400",
+          "year": null,
+          "price": "439.000 ₺",
+          "price_2023": null,
+          "price_2024": "439.000 ₺"
+        },
+        {
+          "name": "Burgman Street 125",
+          "year": null,
+          "price": "146.000 ₺",
+          "price_2023": null,
+          "price_2024": "146.000 ₺"
+        },
+        {
+          "name": "Address 125",
+          "year": null,
+          "price": "115.000 ₺",
+          "price_2023": null,
+          "price_2024": "115.000 ₺"
+        },
+        {
+          "name": "Avenis 125",
+          "year": null,
+          "price": "125.000 ₺",
+          "price_2023": null,
+          "price_2024": "125.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "TOURING",
+      "products": [
+        {
+          "name": "NT1100",
+          "year": null,
+          "price": "753.750 ₺"
+        },
+        {
+          "name": "NT1100 - DCT",
+          "year": null,
+          "price": "785.500 ₺"
+        },
+        {
+          "name": "GL1800 Gold Wing Bagger - DCT",
+          "year": null,
+          "price": "1.540.250 ₺"
+        },
+        {
+          "name": "GL1800 Gold Wing",
+          "year": null,
+          "price": "1.637.000 ₺"
+        },
+        {
+          "name": "GL1800 Gold Wing - DCT",
+          "year": null,
+          "price": "1.780.750 ₺"
+        }
+      ]
+    },
+    {
+      "category": "TRIUMPH - Adventure",
+      "products": [
+        {
+          "name": "TIGER 900 GT_New Model",
+          "year": 2024,
+          "price": "661.900 ₺",
+          "price_alternative": "727.000 ₺"
+        },
+        {
+          "name": "TIGER 900 GT Pro_New Model",
+          "year": 2024,
+          "price": "749.000 ₺",
+          "price_alternative": null
+        },
+        {
+          "name": "TIGER 900 Rally Pro_New Model",
+          "year": 2024,
+          "price": "770.000 ₺",
+          "price_alternative": null
+        },
+        {
+          "name": "TIGER Sport 660",
+          "year": 2024,
+          "price": "509.900 ₺",
+          "price_alternative": "561.900 ₺"
+        },
+        {
+          "name": "TIGER Sport 800",
+          "year": 2024,
+          "price_alternative": "608.000 ₺"
+        },
+        {
+          "name": "Tiger 1200 GT Pro",
+          "year": 2024,
+          "price": "934.900 ₺",
+          "price_alternative": "1.039.000 ₺"
+        },
+        {
+          "name": "Tiger 1200 Rally Pro",
+          "year": 2024,
+          "price": "979.900 ₺",
+          "price_alternative": "1.079.000 ₺"
+        },
+        {
+          "name": "Tiger 1200 GT Explorer",
+          "year": 2024,
+          "price": "1.024.900 ₺",
+          "price_alternative": "1.133.000 ₺"
+        },
+        {
+          "name": "Tiger 1200 Rally Explorer",
+          "year": 2024,
+          "price": "1.059.900 ₺",
+          "price_alternative": "1.174.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "TRIUMPH - Classics",
+      "products": [
+        {
+          "name": "Speed 400_New Model",
+          "year": 2024,
+          "price": "329.900 ₺",
+          "price_alternative": "360.000 ₺"
+        },
+        {
+          "name": "Scrambler 400 X_New Model",
+          "year": 2024,
+          "price": "349.900 ₺",
+          "price_alternative": "390.000 ₺"
+        },
+        {
+          "name": "Speed Twin 900",
+          "year": 2024,
+          "price": "494.900 ₺",
+          "price_alternative": "591.900 ₺"
+        },
+        {
+          "name": "Scrambler 900",
+          "year": 2024,
+          "price": "514.900 ₺",
+          "price_alternative": "595.000 ₺"
+        },
+        {
+          "name": "Bonneville T100",
+          "year": 2024,
+          "price": "514.900 ₺",
+          "price_alternative": "595.000 ₺"
+        },
+        {
+          "name": "Bonneville T120 Black",
+          "year": 2024,
+          "price": "644.900 ₺",
+          "price_alternative": "746.000 ₺"
+        },
+        {
+          "name": "Thruxton 1200 RS_( Final Edt.+ 24,000 TL )",
+          "year": 2024,
+          "price": "844.900 ₺",
+          "price_alternative": null
+        },
+        {
+          "name": "Scrambler 1200 X",
+          "year": 2024,
+          "price": "739.900 ₺",
+          "price_alternative": "833.000 ₺"
+        },
+        {
+          "name": "Scrambler 1200 XE",
+          "year": 2024,
+          "price": "789.900 ₺",
+          "price_alternative": "903.000 ₺"
+        },
+        {
+          "name": "Bonneville Speed Twin 1200",
+          "year": 2024,
+          "price": "714.900 ₺",
+          "price_alternative": null
+        },
+        {
+          "name": "Bonneville Bobber",
+          "year": 2024,
+          "price": "724.900 ₺",
+          "price_alternative": "839.000 ₺"
+        },
+        {
+          "name": "Bonneville Speedmaster",
+          "year": 2024,
+          "price": "724.900 ₺",
+          "price_alternative": "839.000 ₺"
+        },
+        {
+          "name": "Rocket 3 R",
+          "year": 2024,
+          "price": "1.159.900 ₺",
+          "price_alternative": null
+        },
+        {
+          "name": "Rocket 3 GT",
+          "year": 2024,
+          "price": "1.189.900 ₺",
+          "price_alternative": null
+        },
+        {
+          "name": "Rocket 3 R_Storm",
+          "year": 2024,
+          "price": "1.174.900 ₺",
+          "price_alternative": null
+        },
+        {
+          "name": "Rocket 3 GT_Storm",
+          "year": 2024,
+          "price": "1.199.900 ₺",
+          "price_alternative": "1.305.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "TRIUMPH - Roadsters",
+      "products": [
+        {
+          "name": "Trident 660 ( Tribute + 15,000 TL )",
+          "year": 2024,
+          "price": "434.900 ₺",
+          "price_alternative": "508.000 ₺"
+        },
+        {
+          "name": "Street Triple 765 R",
+          "year": 2024,
+          "price": "554.900 ₺",
+          "price_alternative": "641.000 ₺"
+        },
+        {
+          "name": "Street Triple 765 RS",
+          "year": 2024,
+          "price": "623.900 ₺",
+          "price_alternative": "710.000 ₺"
+        },
+        {
+          "name": "Speed Triple RS",
+          "year": 2024,
+          "price": "891.900 ₺",
+          "price_alternative": "939.900 ₺"
+        }
+      ]
+    },
+    {
+      "category": "TRIUMPH - Sport",
+      "products": [
+        {
+          "name": "Daytona 660_New Model",
+          "year": 2024,
+          "price": "529.900 ₺",
+          "price_alternative": "591.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - ATV TRAKTÖR",
+      "products": [
+        {
+          "name": "KODIAK 700 EPS SE ATV TRAKTÖR",
+          "year": 2024,
+          "price": "683.500 ₺"
+        },
+        {
+          "name": "YFZ 50 ATV",
+          "year": null,
+          "price": "123.500 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - Adventure",
+      "products": [
+        {
+          "name": "Ténéré 700 World Raid",
+          "year": 2024,
+          "price": "688.000 ₺"
+        },
+        {
+          "name": "TÉNÉRÉ 700 Extreme",
+          "year": 2024,
+          "price": "625.000 ₺"
+        },
+        {
+          "name": "TÉNÉRÉ 700 Explore",
+          "year": 2024,
+          "price": "619.500 ₺"
+        },
+        {
+          "name": "Ténéré 700",
+          "year": 2024,
+          "price": "576.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - Hyper Naked",
+      "products": [
+        {
+          "name": "MT-125",
+          "year": 2024,
+          "price": "230.000 ₺"
+        },
+        {
+          "name": "MT-25",
+          "year": 2024,
+          "price": "281.000 ₺"
+        },
+        {
+          "name": "MT-07 PURE",
+          "year": 2024,
+          "price": "390.500 ₺"
+        },
+        {
+          "name": "MT-07",
+          "year": 2024,
+          "price": "423.500 ₺"
+        },
+        {
+          "name": "MT-09 M. Nesil",
+          "year": 2024,
+          "price": "510.000 ₺"
+        },
+        {
+          "name": "MT-09 SP IV. Nesil",
+          "year": 2024,
+          "price": "697.500 ₺"
+        },
+        {
+          "name": "MT-10",
+          "year": 2024,
+          "price": "855.000 ₺"
+        },
+        {
+          "name": "MT-09 IV. NESİL",
+          "year": 2024,
+          "price": "610.000 ₺"
+        },
+        {
+          "name": "MT-10 SP",
+          "year": 2024,
+          "price": "1.018.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - Off Road Competition",
+      "products": [
+        {
+          "name": "PW50",
+          "year": null,
+          "price": "86.500 ₺"
+        },
+        {
+          "name": "YZ65",
+          "year": null,
+          "price": "227.000 ₺"
+        },
+        {
+          "name": "YZ85",
+          "year": null,
+          "price": "252.000 ₺"
+        },
+        {
+          "name": "YZ125",
+          "year": null,
+          "price": "375.000 ₺"
+        },
+        {
+          "name": "YZ250",
+          "year": null,
+          "price": "409.500 ₺"
+        },
+        {
+          "name": "YZ250 MONSTER",
+          "year": null,
+          "price": "418.500 ₺"
+        },
+        {
+          "name": "YZ250F",
+          "year": null,
+          "price": "449.500 ₺"
+        },
+        {
+          "name": "YZ450F",
+          "year": null,
+          "price": "587.500 ₺"
+        },
+        {
+          "name": "TTR125LWE",
+          "year": null,
+          "price": "179.500 ₺"
+        },
+        {
+          "name": "TTR110E",
+          "year": null,
+          "price": "151.000 ₺"
+        },
+        {
+          "name": "TTR50",
+          "year": null,
+          "price": "83.500 ₺"
+        },
+        {
+          "name": "WR250F",
+          "year": null,
+          "price": "428.000 ₺"
+        },
+        {
+          "name": "WR450F",
+          "year": null,
+          "price": "564.500 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - Sport Heritage",
+      "products": [
+        {
+          "name": "XSR125",
+          "year": 2024,
+          "price": "210.500 ₺"
+        },
+        {
+          "name": "XSR700",
+          "year": 2024,
+          "price": "450.500 ₺"
+        },
+        {
+          "name": "XSR700 XTribute",
+          "year": 2024,
+          "price": "488.500 ₺"
+        },
+        {
+          "name": "XSR 900 GP",
+          "year": 2024,
+          "price": "726.500 ₺"
+        },
+        {
+          "name": "XSR 900",
+          "year": 2024,
+          "price": "622.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - Sport Scooter",
+      "products": [
+        {
+          "name": "XMAX 250",
+          "year": 2024,
+          "price": "268.000 ₺"
+        },
+        {
+          "name": "XMAX 250 Tech MAX",
+          "year": 2024,
+          "price": "296.500 ₺"
+        },
+        {
+          "name": "XMAX 300 Tech MAX",
+          "year": 2024,
+          "price": "380.000 ₺"
+        },
+        {
+          "name": "TMAX Tech MAX",
+          "year": 2024,
+          "price": "839.500 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - Sport Touring",
+      "products": [
+        {
+          "name": "Tracer 7",
+          "year": 2024,
+          "price": "512.000 ₺"
+        },
+        {
+          "name": "Tracer 9",
+          "year": 2024,
+          "price": "621.000 ₺"
+        },
+        {
+          "name": "Tracer 9 GT (Yan Çantalı)",
+          "year": 2024,
+          "price": "764.500 ₺"
+        },
+        {
+          "name": "NIKEN GT",
+          "year": 2024,
+          "price": "958.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - Super Sport",
+      "products": [
+        {
+          "name": "R125",
+          "year": 2024,
+          "price": "241.500 ₺"
+        },
+        {
+          "name": "R25",
+          "year": 2024,
+          "price": "298.000 ₺"
+        },
+        {
+          "name": "R3",
+          "year": 2024,
+          "price": "372.500 ₺"
+        },
+        {
+          "name": "R7",
+          "year": 2024,
+          "price": "522.500 ₺"
+        },
+        {
+          "name": "R1",
+          "year": 2024,
+          "price": "1.104.000 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - Urban Mobility - Elektrikli",
+      "products": [
+        {
+          "name": "NEO'S",
+          "year": 2023,
+          "price": "117.500 ₺"
+        },
+        {
+          "name": "NEO'S Çift Bataryalı",
+          "year": 2024,
+          "price": "133.500 ₺"
+        },
+        {
+          "name": "NEO'S Çift Bataryalı",
+          "year": 2023,
+          "price": "129.500 ₺"
+        }
+      ]
+    },
+    {
+      "category": "YAMAHA - Urban Mobility Scooter",
+      "products": [
+        {
+          "name": "D'elight",
+          "year": 2024,
+          "price": "130.000 ₺"
+        },
+        {
+          "name": "NMAX 125",
+          "year": 2024,
+          "price": "159.500 ₺"
+        },
+        {
+          "name": "NMAX 155",
+          "year": 2024,
+          "price": "183.000 ₺"
+        },
+        {
+          "name": "Tricity 155",
+          "year": 2024,
+          "price": "215.000 ₺"
+        },
+        {
+          "name": "Tricity 300",
+          "year": 2023,
+          "price": "472.500 ₺"
+        },
+        {
+          "name": "Tricity 300",
+          "year": 2024,
+          "price": "528.000 ₺"
+        }
+      ]
+    }
+  ]
