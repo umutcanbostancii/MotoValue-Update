@@ -1,19 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User as FirebaseUser } from 'firebase/auth';
-import { signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, onAuthChange } from '../lib/firebase';
-import { supabase } from '../lib/supabase';
-
-interface AuthUser {
-  uid: string;
-  email: string;
-  role: 'user' | 'admin' | 'dealer';
-  dealerId?: string;
-}
+import { User } from '@supabase/supabase-js';
+import { signIn as supabaseSignIn, signUp as supabaseSignUp, signOut as supabaseSignOut, onAuthStateChange, getUserRole, AuthUser } from '../lib/auth';
 
 interface AuthContextType {
   user: AuthUser | null;
-  signIn: (email: string, password: string) => Promise<FirebaseUser>;
-  signUp: (email: string, password: string) => Promise<FirebaseUser>;
+  signIn: (email: string, password: string) => Promise<User | null>;
+  signUp: (email: string, password: string) => Promise<User | null>;
   signOut: () => Promise<void>;
   loading: boolean;
 }
@@ -26,58 +18,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     console.log('Setting up auth state listener');
-    const unsubscribe = onAuthChange(async (firebaseUser) => {
-      console.log('Auth state changed:', firebaseUser?.email);
-      console.log('Firebase User ID:', firebaseUser?.uid);
-      console.log('Full Firebase user object:', firebaseUser);
+    const { data: { subscription } } = onAuthStateChange(async (supabaseUser) => {
+      console.log('Auth state changed:', supabaseUser?.email);
       
-      if (firebaseUser) {
+      if (supabaseUser) {
         try {
-          console.log('Attempting to fetch dealer user data for UID:', firebaseUser.uid);
+          const role = await getUserRole(supabaseUser.id);
           
-          // Önce dealer_users tablosundan kontrol et
-          const { data: dealerUser, error: dealerError } = await supabase
-            .from('dealer_users')
-            .select('role, dealer_id')
-            .eq('firebase_uid', firebaseUser.uid)
-            .maybeSingle();
-
-          console.log('Supabase response:', { dealerUser, dealerError });
-
-          if (dealerError) {
-            console.error('Dealer user fetch error:', dealerError);
-            console.error('Dealer user fetch error details:', dealerError.message);
-            // Hata durumunda user'ı null yapmak yerine normal kullanıcı olarak devam et
-            setUser({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email ?? '',
-              role: 'user',
-              dealerId: undefined
-            });
-            setLoading(false);
-            return;
-          }
-
-          console.log('Fetched dealer user:', dealerUser);
-
           setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email ?? '',
-            role: dealerUser?.role ? 'dealer' : 'user',
-            dealerId: dealerUser?.dealer_id
+            id: supabaseUser.id,
+            email: supabaseUser.email ?? '',
+            role: role,
+            dealerId: role === 'dealer' ? supabaseUser.id : undefined
           });
         } catch (error) {
           console.error('Error in auth state change:', error);
-          // Hata durumunda user'ı null yapmak yerine normal kullanıcı olarak devam et
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email ?? '',
-            role: 'user',
-            dealerId: undefined
-          });
+          setUser(null);
         }
       } else {
-        console.log('No Firebase user, setting user to null');
+        console.log('No user, setting user to null');
         setUser(null);
       }
       setLoading(false);
@@ -85,14 +44,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => {
       console.log('Cleaning up auth state listener');
-      unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
       console.log('Attempting sign in for:', email);
-      const user = await firebaseSignIn(email, password);
+      const user = await supabaseSignIn(email, password);
       console.log('Sign in successful');
       return user;
     } catch (error) {
@@ -104,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = useCallback(async (email: string, password: string) => {
     try {
       console.log('Attempting sign up for:', email);
-      const user = await firebaseSignUp(email, password);
+      const user = await supabaseSignUp(email, password);
       console.log('Sign up successful');
       return user;
     } catch (error) {
@@ -116,7 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = useCallback(async () => {
     try {
       console.log('Attempting sign out');
-      await firebaseSignOut();
+      await supabaseSignOut();
       console.log('Sign out successful');
     } catch (error) {
       console.error('Sign out error:', error);
@@ -139,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 }
 
-const useAuth = () => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');

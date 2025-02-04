@@ -7,6 +7,9 @@ import { History } from '../components/pages/History';
 import { Guide } from '../components/pages/Guide';
 import { Settings } from '../components/pages/Settings';
 import { Admin } from '../components/pages/Admin';
+import Login from '../pages/Login';
+import Register from '../pages/Register';
+import { ProtectedRoute } from '../components/auth/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -14,8 +17,16 @@ export const router = createBrowserRouter([
     element: <Landing />,
   },
   {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/register',
+    element: <Register />,
+  },
+  {
     path: '/dashboard',
-    element: <Layout />,
+    element: <ProtectedRoute><Layout /></ProtectedRoute>,
     children: [
       {
         index: true,

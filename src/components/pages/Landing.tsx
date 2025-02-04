@@ -58,6 +58,18 @@ export function Landing() {
             </div>
             <div className="flex items-center space-x-4">
               <Link
+                to="/login"
+                className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Giriş Yap
+              </Link>
+              <Link
+                to="/register"
+                className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Kayıt Ol
+              </Link>
+              <Link
                 to="/dashboard"
                 className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
               >

@@ -1,0 +1,70 @@
+# MotoValue Project History & Rules
+Last Updated: 2025-02-04 17:25:00 UTC
+
+## Project Timeline
+
+### 2025-02-04
+1. Authentication Migration (Firebase -> Supabase)
+   - Removed firebase_uid column
+   - Updated role constraints
+   - Added new auth policies
+   - Status: ✅ COMPLETED
+
+2. Database Structure Updates
+   - Added updated_at columns to all tables
+   - Added triggers for timestamp management
+   - Added RLS policies
+   - Status: ✅ COMPLETED
+
+3. Security Implementation
+   - Implemented RLS for all tables
+   - Added role-based access control
+   - Created dealer_users policies
+   - Status: ✅ COMPLETED
+
+4. Testing
+   - Tested triggers
+   - Tested RLS policies
+   - Tested user roles
+   - Status: ✅ COMPLETED
+
+## Current State
+- Authentication: Supabase
+- Database: PostgreSQL (Supabase)
+- Security: RLS + Role-based access
+- Tables:
+  - dealer_users
+  - dealers
+  - motorcycles
+  - price_algorithms
+  - price_calculations
+
+## Next Steps
+1. Price Calculation Algorithm Implementation
+2. User Interface Development
+3. Performance Optimization
+
+## Project Rules
+1. All tables must have updated_at and created_at
+2. All updates must use triggers for timestamp management
+3. All tables must have RLS policies
+4. All user access must be role-based
+5. All code changes must be documented here
+
+## Notes for AI
+- Previous authentication was Firebase
+- Current authentication is Supabase
+- Role types: 'user', 'admin', 'dealer'
+- Main tables and their relationships are documented
+- Security policies are in place and tested
+
+## Test Users
+1. Dealer User:
+   - ID: 937343e5-6568-4c7b-be85-20aacff0a462
+   - Role: dealer
+   - Dealer: Dealer A
+
+2. Admin User:
+   - ID: 7e35f612-3ec9-4d32-a310-3e0db341a496
+   - Role: admin
+   - Dealer: Dealer B 
