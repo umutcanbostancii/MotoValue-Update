@@ -1,47 +1,63 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User } from '@supabase/supabase-js';
-import { signIn as supabaseSignIn, signUp as supabaseSignUp, signOut as supabaseSignOut, onAuthStateChange, getUserRole, AuthUser } from '../lib/auth';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
-  user: AuthUser | null;
-  signIn: (email: string, password: string) => Promise<User | null>;
-  signUp: (email: string, password: string) => Promise<User | null>;
-  signOut: () => Promise<void>;
+  user: User | null;
   loading: boolean;
+  error: string | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  error: null,
+});
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     console.log('Setting up auth state listener');
-    const { data: { subscription } } = onAuthStateChange(async (supabaseUser) => {
-      console.log('Auth state changed:', supabaseUser?.email);
-      
-      if (supabaseUser) {
-        try {
-          const role = await getUserRole(supabaseUser.id);
-          console.log('User role:', role);
-          
-          setUser({
-            id: supabaseUser.id,
-            email: supabaseUser.email ?? '',
-            role: role,
-            dealerId: role === 'dealer' ? supabaseUser.id : undefined
-          });
-        } catch (error) {
-          console.error('Error in auth state change:', error);
-          setUser(null);
+    
+    // Get initial session
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error('Error fetching session:', sessionError);
+          setError(sessionError.message);
+        } else {
+          setUser(session?.user ?? null);
         }
-      } else {
-        console.log('No user, setting user to null');
-        setUser(null);
+      } catch (err) {
+        console.error('Auth initialization error:', err);
+        setError('Authentication initialization failed');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+
+    initializeAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state change event:', event);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
 
     return () => {
       console.log('Cleaning up auth state listener');
@@ -49,62 +65,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    try {
-      console.log('Attempting sign in for:', email);
-      const user = await supabaseSignIn(email, password);
-      console.log('Sign in successful:', user);
-      return user;
-    } catch (error) {
-      console.error('Sign in error:', error);
-      throw error;
-    }
-  }, []);
-
-  const signUp = useCallback(async (email: string, password: string) => {
-    try {
-      console.log('Attempting sign up for:', email);
-      const user = await supabaseSignUp(email, password);
-      console.log('Sign up successful:', user);
-      return user;
-    } catch (error) {
-      console.error('Sign up error:', error);
-      throw error;
-    }
-  }, []);
-
-  const signOut = useCallback(async () => {
-    try {
-      console.log('Attempting sign out');
-      await supabaseSignOut();
-      console.log('Sign out successful');
-    } catch (error) {
-      console.error('Sign out error:', error);
-      throw error;
-    }
-  }, []);
-
   const value = {
     user,
-    signIn,
-    signUp,
-    signOut,
-    loading
+    loading,
+    error,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
-
-export default useAuth;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

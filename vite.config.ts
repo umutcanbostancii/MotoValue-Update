@@ -8,7 +8,9 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
-    port: 5177,
+    port: 5178,
     strictPort: false,
   },
+  envDir: './',
+  envPrefix: 'VITE_',
 });

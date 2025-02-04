@@ -1,5 +1,21 @@
-import { AuthError, User } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { createClient, AuthError, Session, User } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Supabase URL ve Anon Key tanımlanmamış!');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
+  }
+});
+
+export type { User, Session, AuthError };
 
 export type AuthUser = {
   id: string;

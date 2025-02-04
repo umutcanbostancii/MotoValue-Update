@@ -10,6 +10,7 @@ import { Admin } from '../components/pages/Admin';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import { ProtectedRoute } from '../components/auth/ProtectedRoute';
+import CalculationResultPage from '../pages/calculate/Result';
 
 export const router = createBrowserRouter([
   {
@@ -51,6 +52,10 @@ export const router = createBrowserRouter([
       {
         path: 'admin',
         element: <Admin />,
+      },
+      {
+        path: 'calculate/result',
+        element: <CalculationResultPage />,
       },
     ],
   },
