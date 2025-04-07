@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Bike, AlertCircle } from 'lucide-react';
-import useAuth from '../../contexts/AuthContext';
+import AuthContext from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 
 type RegisterType = 'dealer' | 'user' | null;
@@ -14,6 +14,7 @@ export function RegisterPage() {
   const [location, setLocation] = useState('');
   const [error, setError] = useState('');
   const [registerType, setRegisterType] = useState<RegisterType>(null);
+  const { useAuth } = AuthContext;
   const { signUp } = useAuth();
   const navigate = useNavigate();
 

@@ -6,12 +6,18 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string) => Promise<any>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   error: null,
+  signIn: async () => { throw new Error('Not implemented'); },
+  signUp: async () => { throw new Error('Not implemented'); },
+  signOut: async () => { throw new Error('Not implemented'); }
 });
 
 export const useAuth = () => {
@@ -26,6 +32,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Sign in function
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    if (error) throw error;
+    return data.user;
+  };
+
+  // Sign up function
+  const signUp = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password
+    });
+    
+    if (error) throw error;
+    return data.user;
+  };
+
+  // Sign out function
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  };
 
   useEffect(() => {
     console.log('Setting up auth state listener');
@@ -69,7 +103,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     loading,
     error,
+    signIn,
+    signUp,
+    signOut
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+// Add a default export that's compatible with the existing imports
+const AuthModule = { useAuth };
+export default AuthModule;

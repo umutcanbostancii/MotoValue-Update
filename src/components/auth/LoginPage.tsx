@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Bike, AlertCircle } from 'lucide-react';
-import useAuth from '../../contexts/AuthContext';
+import AuthContext from '../../contexts/AuthContext';
 
 type LoginType = 'dealer' | 'admin' | null;
 
@@ -10,6 +10,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loginType, setLoginType] = useState<LoginType>(null);
+  const { useAuth } = AuthContext;
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
