@@ -234,15 +234,18 @@ export function Calculator() {
       const motorcycleId = motorcycleData.id;
 
       // 2. RPC fonksiyonunu çağır
+      console.log('Gönderilen damageStatus:', damageStatus);
+      
       const { data: calculationData, error: calculationError } = await supabase
         .rpc('calculate_motorcycle_price', {
           input_motorcycle_id: motorcycleId,
           input_mileage: parseInt(mileage, 10),
           input_condition: condition,
-          input_damage_status: JSON.stringify(damageStatus)
+          input_damage_status: damageStatus
         });
 
       if (calculationError) {
+        console.error('RPC error details:', calculationError);
         throw new Error(calculationError.message);
       }
 
