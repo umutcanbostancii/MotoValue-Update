@@ -239,7 +239,7 @@ export function Calculator() {
           input_motorcycle_id: motorcycleId,
           input_mileage: parseInt(mileage, 10),
           input_condition: condition,
-          input_damage_status: damageStatus
+          input_damage_status: JSON.stringify(damageStatus)
         });
 
       if (calculationError) {
