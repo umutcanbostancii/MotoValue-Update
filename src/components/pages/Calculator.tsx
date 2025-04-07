@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Calculator as CalcIcon, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
 
 interface Motorcycle {
   id: string;
@@ -128,6 +130,7 @@ export function Calculator() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchMotorcycles();
@@ -185,14 +188,25 @@ export function Calculator() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (loading) return; // Prevent double submission
-    
+    setLoading(true);
     try {
-      setLoading(true);
       await handleCalculate();
+      
+      // Motosiklet ID'sini al
+      const { data: motorcycleData } = await supabase
+        .from('motorcycles')
+        .select('id')
+        .eq('brand', selectedBrand)
+        .eq('model', selectedModel)
+        .eq('year', parseInt(selectedYear, 10))
+        .single();
+      
+      if (motorcycleData?.id) {
+        // Detaylı sonuç sayfasına yönlendir
+        navigate(`/dashboard/calculate/result?id=${motorcycleData.id}&mileage=${mileage}&condition=${condition}&damageStatus=${encodeURIComponent(JSON.stringify(damageStatus))}`);
+      }
     } catch (error) {
-      console.error('Submit error:', error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -217,12 +231,15 @@ export function Calculator() {
         return;
       }
 
-      // Mevcut kullanıcıyı al
-      const userResponse = await Promise.race([
-        supabase.auth.getUser(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
-      ]) as Awaited<ReturnType<typeof supabase.auth.getUser>>;
+      // Yıl değerini kontrol et
+      const yearValue = parseInt(selectedYear, 10);
+      if (isNaN(yearValue) || yearValue <= 0) {
+        toast.error('Geçerli bir yıl değeri giriniz');
+        return;
+      }
 
+      // Mevcut kullanıcıyı al
+      const userResponse = await supabase.auth.getUser();
       if (userResponse.error) {
         toast.error('Kullanıcı bilgisi alınamadı');
         return;
@@ -234,60 +251,68 @@ export function Calculator() {
         return;
       }
 
-      // Veriyi hazırla
-      const calculationData = {
+      // 1. Önce motosiklet ID'sini bul
+      const { data: motorcycleData, error: motorcycleError } = await supabase
+        .from('motorcycles')
+        .select('id')
+        .eq('brand', selectedBrand)
+        .eq('model', selectedModel)
+        .eq('year', yearValue)
+        .single();
+
+      if (motorcycleError || !motorcycleData) {
+        toast.error('Motosiklet bilgisi bulunamadı');
+        return;
+      }
+
+      const motorcycleId = motorcycleData.id;
+
+      // 2. RPC fonksiyonunu çağır
+      const { data: calculationData, error: calculationError } = await supabase
+        .rpc('calculate_motorcycle_price', {
+          input_motorcycle_id: motorcycleId,
+          input_mileage: parseInt(mileage, 10),
+          input_condition: condition,
+          input_damage_status: damageStatus
+        });
+
+      if (calculationError) {
+        throw new Error(calculationError.message);
+      }
+
+      if (!calculationData) {
+        throw new Error('Hesaplama yapılamadı');
+      }
+
+      // 3. Sonucu price_calculations tablosuna kaydet
+      const calculationRecord = {
+        motorcycle_id: motorcycleId,
         user_id: user.id,
-        brand: selectedBrand,
-        model: selectedModel,
-        year: parseInt(selectedYear),
         mileage: parseInt(mileage),
-        condition,
-        category: selectedCategory || null,
-        engine_power: enginePower || null,
-        engine_cc: engineCC || null,
-        timing_type: timingType || null,
-        cylinder_count: cylinderCount || null,
-        transmission: transmission || null,
-        cooling: cooling || null,
-        color: color || null,
-        origin: origin || null,
+        condition: condition,
+        calculated_price: calculationData.calculated_price,
         technical_features: technicalFeatures,
         accessories: accessories,
-        damage_status: damageStatus,
-        tradeable,
-        status: 'pending'
+        damage_status: damageStatus
       };
 
-      interface PriceCalculation {
-        calculated_price: number;
-        [key: string]: any;
+      const { error: insertError } = await supabase
+        .from('price_calculations')
+        .insert(calculationRecord);
+
+      if (insertError) {
+        console.error('Kayıt hatası:', insertError);
+        // Kayıt hatası olsa bile hesaplanan fiyatı göster
       }
+
+      // Hesaplama sonucunu state'e kaydet
+      setCalculatedPrice(calculationData.calculated_price);
       
-      // Fiyat hesaplama isteği
-      const result = await Promise.race([
-        supabase
-          .from('price_calculations')
-          .insert(calculationData)
-          .select()
-          .single(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
-      ]) as { data: PriceCalculation | null; error: any };
-
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-
-      // Başarılı hesaplama
-      if (result.data) {
-        setCalculatedPrice(result.data.calculated_price);
-        
-        if (result.data.calculated_price) {
-          toast.success(`Hesaplanan Fiyat: ${new Intl.NumberFormat('tr-TR', {
-            style: 'currency',
-            currency: 'TRY'
-          }).format(result.data.calculated_price)}`);
-        }
-      }
+      // Başarı mesajı göster
+      toast.success(`Hesaplanan Fiyat: ${new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: 'TRY'
+      }).format(calculationData.calculated_price)}`);
 
     } catch (error: any) {
       if (error.message === 'Timeout') {
@@ -392,7 +417,10 @@ export function Calculator() {
                 >
                   <option value="">Seçiniz</option>
                   <option value="new">Sıfır</option>
-                  <option value="used">İkinci El</option>
+                  <option value="excellent">Mükemmel</option>
+                  <option value="good">İyi</option>
+                  <option value="fair">Orta</option>
+                  <option value="poor">Kötü</option>
                 </select>
               </div>
             </div>

@@ -1,0 +1,4 @@
+MotoValue Projesi Değerlendirme Raporu
+Proje Versiyonu: 0.0.0
+Node.js Versiyonu: v20.18.0
+NPM Versiyonu: 10.8.2
