@@ -32,17 +32,17 @@ interface DamageDetail {
 }
 
 interface CalculationResult {
-  motorcycle_details: {
-    brand: string;
-    model: string;
-    year: number;
-    category: string;
-    engine_cc: number;
+  motorcycle_details?: {
+    brand?: string;
+    model?: string;
+    year?: number;
+    category?: string;
+    engine_cc?: number;
   };
-  base_price: number;
-  price_adjustments: PriceAdjustment[];
-  damage_details: DamageDetail[];
-  calculated_price: number;
+  base_price?: number;
+  price_adjustments?: PriceAdjustment[];
+  damage_details?: DamageDetail[];
+  calculated_price?: number;
 }
 
 export default function CalculationResultPage() {
@@ -83,7 +83,20 @@ export default function CalculationResultPage() {
           throw supabaseError;
         }
 
+        console.log("Hesaplama sonucu:", data);
+
         if (data) {
+          // Veri yapısı beklediğimiz gibi mi kontrol et
+          if (!data.motorcycle_details) {
+            data.motorcycle_details = {};
+          }
+          if (!data.price_adjustments) {
+            data.price_adjustments = [];
+          }
+          if (!data.damage_details) {
+            data.damage_details = [];
+          }
+
           setResult(data);
         } else {
           setError('Hesaplama sonucu bulunamadı');
@@ -177,11 +190,11 @@ export default function CalculationResultPage() {
     };
     
     const motoBilgileri = [
-      ["Marka", result.motorcycle_details.brand],
-      ["Model", result.motorcycle_details.model],
-      ["Yıl", result.motorcycle_details.year.toString()],
-      ["Kategori", result.motorcycle_details.category],
-      ["Motor Hacmi", `${result.motorcycle_details.engine_cc} cc`],
+      ["Marka", result.motorcycle_details?.brand || "Bilinmiyor"],
+      ["Model", result.motorcycle_details?.model || "Bilinmiyor"],
+      ["Yıl", result.motorcycle_details?.year?.toString() || "Bilinmiyor"],
+      ["Kategori", result.motorcycle_details?.category || "Bilinmiyor"],
+      ["Motor Hacmi", result.motorcycle_details?.engine_cc ? `${result.motorcycle_details.engine_cc} cc` : "Bilinmiyor"],
       ["Kilometre", `${mileage} km`],
       ["Durum", condition]
     ];
@@ -215,7 +228,7 @@ export default function CalculationResultPage() {
     
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(`Sıfır km, orijinal durumda motosiklet değeri: ${formatPrice(result.base_price)}`, 14, finalY + 10);
+    doc.text(`Sıfır km, orijinal durumda motosiklet değeri: ${formatPrice(result.base_price || 0)}`, 14, finalY + 10);
     
     // Fiyat faktörleri
     doc.setFontSize(14);
@@ -223,14 +236,14 @@ export default function CalculationResultPage() {
     doc.text("Fiyat Faktörleri", 14, finalY + 25);
     doc.line(14, finalY + 27, 196, finalY + 27);
     
-    const faktörler = result.price_adjustments.map(adj => {
+    const faktörler = result.price_adjustments?.map(adj => {
       return [
         adj.name,
         adj.description,
         adj.effect,
         adj.amount >= 0 ? `+${formatPrice(adj.amount)}` : formatPrice(adj.amount)
       ];
-    });
+    }) || [];
     
     autoTable(doc, {
       startY: finalY + 30,
@@ -300,7 +313,7 @@ export default function CalculationResultPage() {
     
     doc.setFontSize(22);
     doc.setTextColor(46, 204, 113);
-    doc.text(formatPrice(result.calculated_price), 14, finalY3 + 12);
+    doc.text(formatPrice(result.calculated_price || 0), 14, finalY3 + 12);
     
     // Footer
     doc.setTextColor(0, 0, 0);
@@ -310,7 +323,7 @@ export default function CalculationResultPage() {
     doc.text("© 2024 MotoValue - Tüm Hakları Saklıdır", 105, 285, { align: "center" });
     
     // PDF'i kaydet
-    doc.save(`MotoValue_${result.motorcycle_details.brand}_${result.motorcycle_details.model}_${today.replace(/\//g, '-')}.pdf`);
+    doc.save(`MotoValue_${result.motorcycle_details?.brand}_${result.motorcycle_details?.model}_${today.replace(/\//g, '-')}.pdf`);
   };
 
   return (
@@ -322,7 +335,7 @@ export default function CalculationResultPage() {
             Hesaplama Sonucu
           </h1>
           <p className="text-2xl text-green-400 font-bold">
-            {formatPrice(result.calculated_price)}
+            {formatPrice(result.calculated_price || 0)}
           </p>
         </div>
 
@@ -334,23 +347,23 @@ export default function CalculationResultPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <div className="text-gray-400 text-sm">Marka</div>
-              <div className="text-white">{result.motorcycle_details.brand}</div>
+              <div className="text-white">{result.motorcycle_details?.brand}</div>
             </div>
             <div>
               <div className="text-gray-400 text-sm">Model</div>
-              <div className="text-white">{result.motorcycle_details.model}</div>
+              <div className="text-white">{result.motorcycle_details?.model}</div>
             </div>
             <div>
               <div className="text-gray-400 text-sm">Yıl</div>
-              <div className="text-white">{result.motorcycle_details.year}</div>
+              <div className="text-white">{result.motorcycle_details?.year}</div>
             </div>
             <div>
               <div className="text-gray-400 text-sm">Kategori</div>
-              <div className="text-white">{result.motorcycle_details.category}</div>
+              <div className="text-white">{result.motorcycle_details?.category}</div>
             </div>
             <div>
               <div className="text-gray-400 text-sm">Motor Hacmi</div>
-              <div className="text-white">{result.motorcycle_details.engine_cc} cc</div>
+              <div className="text-white">{result.motorcycle_details?.engine_cc} cc</div>
             </div>
             <div>
               <div className="text-gray-400 text-sm">Kilometre</div>
@@ -369,7 +382,7 @@ export default function CalculationResultPage() {
             Baz Fiyat
           </h2>
           <div className="text-2xl font-bold text-white">
-            {formatPrice(result.base_price)}
+            {formatPrice(result.base_price || 0)}
           </div>
           <div className="text-gray-400 mt-1 text-sm">
             Sıfır km, orijinal durumda motosiklet değeri
@@ -393,7 +406,7 @@ export default function CalculationResultPage() {
                 </tr>
               </thead>
               <tbody>
-                {result.price_adjustments.map((adjustment, index) => (
+                {result.price_adjustments?.map((adjustment, index) => (
                   <tr key={index} className="border-t border-gray-800">
                     <td className="py-3 font-medium text-white">{adjustment.name}</td>
                     <td className="py-3 text-gray-300">{adjustment.description}</td>
@@ -410,7 +423,7 @@ export default function CalculationResultPage() {
                 <tr className="border-t border-gray-700">
                   <td className="py-3 font-bold text-white" colSpan={3}>Nihai Fiyat</td>
                   <td className="py-3 text-right font-bold text-green-400">
-                    {formatPrice(result.calculated_price)}
+                    {formatPrice(result.calculated_price || 0)}
                   </td>
                 </tr>
               </tfoot>
