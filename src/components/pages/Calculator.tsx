@@ -52,15 +52,7 @@ interface Accessories {
 }
 
 interface DamageStatus {
-  chassis: { condition: string; repair: string };
-  engine: { condition: string; repair: string };
-  transmission: { condition: string; repair: string };
-  front_fork: { condition: string; repair: string };
-  fuel_tank: { condition: string; repair: string };
-  electrical: { condition: string; repair: string };
-  front_panel: { condition: string; repair: string };
-  rear_panel: { condition: string; repair: string };
-  exhaust: { condition: string; repair: string };
+  [key: string]: { status: string };
 }
 
 export function Calculator() {
@@ -116,15 +108,15 @@ export function Calculator() {
 
   // Hasar/Tramer durumu state'i
   const [damageStatus, setDamageStatus] = useState<DamageStatus>({
-    chassis: { condition: 'Orijinal', repair: '' },
-    engine: { condition: 'Orijinal', repair: '' },
-    transmission: { condition: 'Orijinal', repair: '' },
-    front_fork: { condition: 'Orijinal', repair: '' },
-    fuel_tank: { condition: 'Orijinal', repair: '' },
-    electrical: { condition: 'Orijinal', repair: '' },
-    front_panel: { condition: 'Orijinal', repair: '' },
-    rear_panel: { condition: 'Orijinal', repair: '' },
-    exhaust: { condition: 'Orijinal', repair: '' },
+    chassis: { status: 'Orijinal' },
+    engine: { status: 'Orijinal' },
+    transmission: { status: 'Orijinal' },
+    frontFork: { status: 'Orijinal' },
+    fuelTank: { status: 'Orijinal' },
+    electrical: { status: 'Orijinal' },
+    frontPanel: { status: 'Orijinal' },
+    rearPanel: { status: 'Orijinal' },
+    exhaust: { status: 'Orijinal' },
   });
 
   const [loading, setLoading] = useState(true);
@@ -212,14 +204,10 @@ export function Calculator() {
     }
   };
 
-  const handleDamageStatusChange = (
-    key: keyof DamageStatus,
-    field: 'condition' | 'repair',
-    value: string
-  ) => {
+  const handleDamageStatusChange = (key: string, value: string) => {
     setDamageStatus(prev => ({
       ...prev,
-      [key]: { ...prev[key], [field]: value }
+      [key]: { status: value }
     }));
   };
 
@@ -607,32 +595,38 @@ export function Calculator() {
           <div className="bg-gray-800/50 rounded-lg p-6">
             <h2 className="text-lg font-semibold text-white mb-4">Hasar/Tramer Durumu</h2>
             <div className="grid grid-cols-1 gap-6">
-              {Object.entries(damageStatus).map(([key, value]) => (
-                <div key={key} className="grid grid-cols-3 gap-4 items-center">
-                  <span className="text-sm font-medium text-gray-300">
-                    {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                  </span>
-                  <select
-                    className="rounded-md border border-gray-600 text-white bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={value.condition}
-                    onChange={(e) => handleDamageStatusChange(key as keyof DamageStatus, 'condition', e.target.value)}
-                  >
-                    <option value="original">Orijinal</option>
-                    <option value="painted">Boyalı</option>
-                    <option value="changed">Değişen</option>
-                    <option value="none">Yok</option>
-                  </select>
-                  <select
-                    className="rounded-md border border-gray-600 text-white bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={value.repair}
-                    onChange={(e) => handleDamageStatusChange(key as keyof DamageStatus, 'repair', e.target.value)}
-                  >
-                    <option value="">Onarım Durumu</option>
-                    <option value="repaired">Onarıldı</option>
-                    <option value="not_repaired">Onarılmadı</option>
-                  </select>
-                </div>
-              ))}
+              {Object.entries(damageStatus).map(([key, value]) => {
+                // Türkçe parça isimleri
+                const partNames: {[key: string]: string} = {
+                  'chassis': 'Şasi',
+                  'engine': 'Motor',
+                  'transmission': 'Şanzıman',
+                  'frontFork': 'Ön Amortisör',
+                  'fuelTank': 'Yakıt Deposu',
+                  'electrical': 'Elektrik Sistemi',
+                  'frontPanel': 'Ön Panel',
+                  'rearPanel': 'Arka Panel',
+                  'exhaust': 'Egzoz'
+                };
+                
+                return (
+                  <div key={key} className="grid grid-cols-2 gap-4 items-center">
+                    <span className="text-sm font-medium text-gray-300">
+                      {partNames[key] || key}
+                    </span>
+                    <select
+                      className="rounded-md border border-gray-600 text-white bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={value.status}
+                      onChange={(e) => handleDamageStatusChange(key, e.target.value)}
+                    >
+                      <option value="Orijinal">Orijinal</option>
+                      <option value="Boyalı">Boyalı</option>
+                      <option value="Değişen">Değişen</option>
+                      <option value="Hasarlı">Hasarlı</option>
+                    </select>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

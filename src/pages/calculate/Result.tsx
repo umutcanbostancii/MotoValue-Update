@@ -23,6 +23,14 @@ interface PriceAdjustment {
   amount: number;
 }
 
+interface DamageDetail {
+  part: string;
+  status: string;
+  weight: number;
+  impact: number;
+  weighted_impact: string;
+}
+
 interface CalculationResult {
   motorcycle_details: {
     brand: string;
@@ -33,6 +41,7 @@ interface CalculationResult {
   };
   base_price: number;
   price_adjustments: PriceAdjustment[];
+  damage_details: DamageDetail[];
   calculated_price: number;
 }
 
@@ -130,23 +139,42 @@ export default function CalculationResultPage() {
   const generatePDF = () => {
     if (!result) return;
     
+    // UTF-8 karakter desteği için Helvetica yerine standart font kullanıyoruz
     const doc = new jsPDF();
     
-    // Doküman başlığı
+    // Logo ve başlık
+    doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
     doc.text("MotoValue Değerleme Raporu", 105, 20, { align: "center" });
     
     // Tarih
-    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    const today = new Date().toLocaleDateString('tr-TR');
+    doc.setFont("helvetica", "normal");
+    const today = new Date().toLocaleDateString('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
     doc.text(`Oluşturulma Tarihi: ${today}`, 105, 30, { align: "center" });
     
     // Motosiklet bilgileri
     doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
     doc.text("Motosiklet Özellikleri", 14, 45);
     doc.line(14, 47, 196, 47);
+    
+    // Türkçe parça isimleri tanımlama
+    const partNames: {[key: string]: string} = {
+      'chassis': 'Şasi',
+      'engine': 'Motor',
+      'transmission': 'Şanzıman',
+      'frontFork': 'Ön Amortisör',
+      'fuelTank': 'Yakıt Deposu',
+      'electrical': 'Elektrik Sistemi',
+      'frontPanel': 'Ön Panel',
+      'rearPanel': 'Arka Panel',
+      'exhaust': 'Egzoz'
+    };
     
     const motoBilgileri = [
       ["Marka", result.motorcycle_details.brand],
@@ -163,20 +191,35 @@ export default function CalculationResultPage() {
       head: [['Özellik', 'Değer']],
       body: motoBilgileri,
       theme: 'striped',
-      headStyles: { fillColor: [41, 128, 185] }
+      headStyles: { 
+        fillColor: [41, 128, 185],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      styles: {
+        font: 'helvetica',
+        fontSize: 10,
+        cellPadding: 4
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold' }
+      }
     });
     
     // Baz Fiyat
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const finalY = (doc as any).lastAutoTable.finalY + 15;
     doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
     doc.text("Baz Fiyat", 14, finalY);
     doc.line(14, finalY + 2, 196, finalY + 2);
     
-    doc.setFontSize(12);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
     doc.text(`Sıfır km, orijinal durumda motosiklet değeri: ${formatPrice(result.base_price)}`, 14, finalY + 10);
     
     // Fiyat faktörleri
     doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
     doc.text("Fiyat Faktörleri", 14, finalY + 25);
     doc.line(14, finalY + 27, 196, finalY + 27);
     
@@ -194,27 +237,80 @@ export default function CalculationResultPage() {
       head: [['Faktör', 'Açıklama', 'Etki', 'Tutar']],
       body: faktörler,
       theme: 'striped',
-      headStyles: { fillColor: [41, 128, 185] }
+      headStyles: { 
+        fillColor: [41, 128, 185],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      styles: {
+        font: 'helvetica',
+        fontSize: 10,
+        cellPadding: 4
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        2: { halign: 'right' },
+        3: { halign: 'right' }
+      }
+    });
+    
+    // Hasar detayları
+    const finalY2 = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Hasar/Tramer Detayları", 14, finalY2);
+    doc.line(14, finalY2 + 2, 196, finalY2 + 2);
+    
+    const hasarDetayları = result.damage_details && result.damage_details.length > 0 
+      ? result.damage_details.map(damage => [
+          partNames[damage.part] || damage.part,
+          damage.status,
+          `${(damage.weight * 100).toFixed(0)}%`,
+          damage.impact > 0 ? `-${(damage.impact * 100).toFixed(0)}%` : '0%'
+        ])
+      : [["Hasar bilgisi bulunamadı", "", "", ""]];
+    
+    autoTable(doc, {
+      startY: finalY2 + 10,
+      head: [['Parça', 'Durum', 'Önem Ağırlığı', 'Etki']],
+      body: hasarDetayları,
+      theme: 'striped',
+      headStyles: { 
+        fillColor: [41, 128, 185],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      styles: {
+        font: 'helvetica',
+        fontSize: 10,
+        cellPadding: 4
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold' },
+        2: { halign: 'right' },
+        3: { halign: 'right' }
+      }
     });
     
     // Nihai fiyat
-    const finalY2 = (doc as any).lastAutoTable.finalY + 10;
+    const finalY3 = (doc as any).lastAutoTable.finalY + 20;
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("Nihai Değerleme Sonucu:", 14, finalY2);
-    doc.setFontSize(20);
+    doc.text("Nihai Değerleme Sonucu:", 14, finalY3);
+    
+    doc.setFontSize(22);
     doc.setTextColor(46, 204, 113);
-    doc.text(formatPrice(result.calculated_price), 14, finalY2 + 10);
+    doc.text(formatPrice(result.calculated_price), 14, finalY3 + 12);
     
     // Footer
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
     doc.text("Bu rapor MotoValue tarafından otomatik olarak oluşturulmuştur.", 105, 280, { align: "center" });
     doc.text("© 2024 MotoValue - Tüm Hakları Saklıdır", 105, 285, { align: "center" });
     
     // PDF'i kaydet
-    doc.save(`MotoValue_${result.motorcycle_details.brand}_${result.motorcycle_details.model}_${today}.pdf`);
+    doc.save(`MotoValue_${result.motorcycle_details.brand}_${result.motorcycle_details.model}_${today.replace(/\//g, '-')}.pdf`);
   };
 
   return (
@@ -315,6 +411,73 @@ export default function CalculationResultPage() {
                   <td className="py-3 font-bold text-white" colSpan={3}>Nihai Fiyat</td>
                   <td className="py-3 text-right font-bold text-green-400">
                     {formatPrice(result.calculated_price)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        {/* Hasar Detayları */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 shadow-xl">
+          <h2 className="text-xl font-semibold text-white mb-4 border-b border-gray-700 pb-2">
+            Hasar/Tramer Detayları
+          </h2>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="text-gray-400 text-sm">
+                  <th className="py-2">Parça</th>
+                  <th className="py-2">Durum</th>
+                  <th className="py-2">Önem Ağırlığı</th>
+                  <th className="py-2 text-right">Etki</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.damage_details && result.damage_details.length > 0 ? (
+                  result.damage_details.map((damage, index) => {
+                    // Türkçe parça isimleri
+                    const partNames: {[key: string]: string} = {
+                      'chassis': 'Şasi',
+                      'engine': 'Motor',
+                      'transmission': 'Şanzıman',
+                      'frontFork': 'Ön Amortisör',
+                      'fuelTank': 'Yakıt Deposu',
+                      'electrical': 'Elektrik Sistemi',
+                      'frontPanel': 'Ön Panel',
+                      'rearPanel': 'Arka Panel',
+                      'exhaust': 'Egzoz'
+                    };
+                    
+                    // Durum renklerini belirle
+                    let statusColor = "text-green-400";
+                    if (damage.status === "Boyalı") statusColor = "text-yellow-400";
+                    if (damage.status === "Değişen") statusColor = "text-orange-400";
+                    if (damage.status === "Hasarlı") statusColor = "text-red-400";
+                    
+                    return (
+                      <tr key={index} className="border-t border-gray-800">
+                        <td className="py-3 font-medium text-white">{partNames[damage.part] || damage.part}</td>
+                        <td className={`py-3 ${statusColor}`}>{damage.status}</td>
+                        <td className="py-3 text-gray-300">{(damage.weight * 100).toFixed(0)}%</td>
+                        <td className={`py-3 text-right ${damage.impact > 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                          {damage.impact > 0 ? `-${(damage.impact * 100).toFixed(0)}%` : '0%'}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr className="border-t border-gray-800">
+                    <td colSpan={4} className="py-3 text-center text-gray-400">Hasar bilgisi bulunamadı</td>
+                  </tr>
+                )}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-gray-700">
+                  <td className="py-3 font-bold text-white" colSpan={3}>Toplam Hasar Etkisi</td>
+                  <td className="py-3 text-right font-bold text-red-400">
+                    {result.price_adjustments && result.price_adjustments.find(adj => adj.name === 'Hasar Faktörü')?.effect || '0%'}
                   </td>
                 </tr>
               </tfoot>

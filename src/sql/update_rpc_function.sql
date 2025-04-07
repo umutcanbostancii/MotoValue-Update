@@ -1,3 +1,7 @@
+-- Önce mevcut fonksiyonu sil
+DROP FUNCTION IF EXISTS calculate_motorcycle_price(uuid, integer, text, jsonb);
+
+-- Sonra yeni fonksiyonu oluştur
 CREATE OR REPLACE FUNCTION calculate_motorcycle_price(
   input_motorcycle_id UUID,
   input_mileage INTEGER,
@@ -20,6 +24,16 @@ DECLARE
   current_year INTEGER := EXTRACT(YEAR FROM CURRENT_DATE)::INTEGER;
   age INTEGER;
   price_adjustments JSONB := '[]'::JSONB;
+  damage_details JSONB := '[]'::JSONB;
+  total_damage_impact NUMERIC := 0;
+  part_key TEXT;
+  part_value JSONB;
+  part_name TEXT;
+  part_status TEXT;
+  part_weight NUMERIC;
+  part_impact NUMERIC;
+  total_weighted_impact NUMERIC := 0;
+  total_weight NUMERIC := 0;
 BEGIN
   -- Motosiklet bilgilerini al
   SELECT * INTO motorcycle_record FROM motorcycles WHERE id = input_motorcycle_id;
@@ -32,7 +46,7 @@ BEGIN
   age := current_year - motorcycle_record.year;
   
   -- Baz fiyat
-  base_price := motorcycle_record.base_price;
+  base_price := motorcycle_record.price;
   
   -- Kategori faktörü
   CASE motorcycle_record.category
@@ -68,45 +82,87 @@ BEGIN
   -- Yaş faktörü (her yıl %5 değer kaybı)
   age_factor := POWER(0.95, age);
   
-  -- Kilometre faktörü
+  -- Kilometre faktörü - ikinci el motosikletlerin değerini daha fazla düşürelim
   IF input_mileage < 1000 THEN
-    mileage_factor := 1.05;
+    mileage_factor := 1.02; -- %2 artış (neredeyse sıfır)
   ELSIF input_mileage < 5000 THEN
-    mileage_factor := 1.02;
+    mileage_factor := 1.0; -- Değişiklik yok (standart)
   ELSIF input_mileage < 10000 THEN
-    mileage_factor := 1.0;
+    mileage_factor := 0.97; -- %3 düşüş
   ELSIF input_mileage < 20000 THEN
-    mileage_factor := 0.97;
+    mileage_factor := 0.94; -- %6 düşüş
   ELSIF input_mileage < 30000 THEN
-    mileage_factor := 0.94;
+    mileage_factor := 0.90; -- %10 düşüş
   ELSIF input_mileage < 50000 THEN
-    mileage_factor := 0.90;
+    mileage_factor := 0.85; -- %15 düşüş
   ELSIF input_mileage < 70000 THEN
-    mileage_factor := 0.85;
+    mileage_factor := 0.80; -- %20 düşüş
   ELSIF input_mileage < 100000 THEN
-    mileage_factor := 0.80;
+    mileage_factor := 0.75; -- %25 düşüş
   ELSE
-    mileage_factor := 0.75;
+    mileage_factor := 0.70; -- %30 düşüş
   END IF;
   
   -- Durum faktörü
   CASE input_condition
-    WHEN 'new' THEN condition_factor := 1.1;
-    WHEN 'excellent' THEN condition_factor := 1.05;
-    WHEN 'good' THEN condition_factor := 1.0;
-    WHEN 'fair' THEN condition_factor := 0.9;
-    WHEN 'poor' THEN condition_factor := 0.8;
-    ELSE condition_factor := 0.85;
+    WHEN 'new' THEN condition_factor := 1.0; -- Sıfır
+    WHEN 'excellent' THEN condition_factor := 0.95; -- %5 düşüş
+    WHEN 'good' THEN condition_factor := 0.90; -- %10 düşüş
+    WHEN 'fair' THEN condition_factor := 0.85; -- %15 düşüş
+    WHEN 'poor' THEN condition_factor := 0.75; -- %25 düşüş
+    ELSE condition_factor := 0.80;
   END CASE;
   
-  -- Hasar faktörü (örneğin değişen parçalar sayısına göre)
-  SELECT 1.0 - (0.05 * (
-    SELECT COUNT(*) FROM jsonb_each(input_damage_status)
-    WHERE value->>'status' != 'Orijinal'
-  )) INTO damage_factor;
+  -- Gelişmiş Hasar faktörü hesaplama
+  -- Her parçanın ağırlık faktörü tanımlaması
+  FOR part_key, part_value IN SELECT * FROM jsonb_each(input_damage_status)
+  LOOP
+    part_name := part_key;
+    part_status := part_value->>'status';
+    
+    -- Parça ağırlıkları (önem derecesine göre)
+    CASE part_name
+      WHEN 'chassis' THEN part_weight := 0.25; -- Şasi çok önemli
+      WHEN 'engine' THEN part_weight := 0.20; -- Motor çok önemli
+      WHEN 'transmission' THEN part_weight := 0.15; -- Şanzıman önemli
+      WHEN 'frontFork' THEN part_weight := 0.10; -- Ön amortisör önemli
+      WHEN 'fuelTank' THEN part_weight := 0.05; -- Yakıt deposu daha az önemli
+      WHEN 'electrical' THEN part_weight := 0.10; -- Elektrik sistemi önemli
+      WHEN 'frontPanel' THEN part_weight := 0.05; -- Ön panel daha az önemli
+      WHEN 'rearPanel' THEN part_weight := 0.05; -- Arka panel daha az önemli
+      WHEN 'exhaust' THEN part_weight := 0.05; -- Egzoz daha az önemli
+      ELSE part_weight := 0.05; -- Diğer parçalar
+    END CASE;
+    
+    -- Parça durumuna göre etki faktörü
+    CASE part_status
+      WHEN 'Orijinal' THEN part_impact := 0.0; -- Orijinal parça etkisi yok
+      WHEN 'Boyalı' THEN part_impact := 0.05; -- Boyalı parça %5 değer kaybı
+      WHEN 'Değişen' THEN part_impact := 0.15; -- Değişen parça %15 değer kaybı
+      WHEN 'Hasarlı' THEN part_impact := 0.25; -- Hasarlı parça %25 değer kaybı
+      ELSE part_impact := 0.0; -- Varsayılan
+    END CASE;
+    
+    -- Ağırlıklı etki hesabı
+    total_weighted_impact := total_weighted_impact + (part_weight * part_impact);
+    total_weight := total_weight + part_weight;
+    
+    -- Hasar detaylarını JSON'a ekle
+    damage_details := damage_details || jsonb_build_object(
+      'part', part_name,
+      'status', part_status,
+      'weight', part_weight,
+      'impact', part_impact,
+      'weighted_impact', ROUND(part_weight * part_impact * 100) || '%'
+    );
+  END LOOP;
   
-  -- Minimum hasar faktörü
-  damage_factor := GREATEST(damage_factor, 0.7);
+  -- Toplam hasar faktörünü hesapla (ağırlıklı ortalama)
+  IF total_weight > 0 THEN
+    damage_factor := 1.0 - total_weighted_impact;
+  ELSE
+    damage_factor := 1.0; -- Hasar bilgisi yoksa varsayılan
+  END IF;
   
   -- Tüm faktörlerin çarpımı ile son fiyatı hesapla
   result := jsonb_build_object(
@@ -156,12 +212,13 @@ BEGIN
       ),
       jsonb_build_object(
         'name', 'Hasar Faktörü',
-        'description', 'Hasarlı parça sayısına göre',
+        'description', 'Hasarlı ve değişen parçalara göre',
         'factor', damage_factor,
         'effect', CASE WHEN damage_factor < 1.0 THEN '-' || ROUND((1.0 - damage_factor) * 100) || '%' ELSE ROUND((damage_factor - 1.0) * 100) || '%' END,
         'amount', ROUND((damage_factor - 1.0) * base_price)
       )
     ),
+    'damage_details', damage_details,
     'calculated_price', ROUND(base_price * category_factor * cc_factor * age_factor * mileage_factor * condition_factor * damage_factor)
   );
   
