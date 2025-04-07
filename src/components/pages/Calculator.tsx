@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calculator as CalcIcon, AlertCircle } from 'lucide-react';
+import { Calculator as CalcIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';

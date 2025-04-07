@@ -90,29 +90,6 @@ export interface Database {
           created_at?: string
         }
       }
-      dealer_users: {
-        Row: {
-          id: string
-          dealer_id: string
-          firebase_uid: string
-          role: 'owner' | 'employee'
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          dealer_id: string
-          firebase_uid: string
-          role: 'owner' | 'employee'
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          dealer_id?: string
-          firebase_uid?: string
-          role?: 'owner' | 'employee'
-          created_at?: string
-        }
-      }
       price_algorithms: {
         Row: {
           id: string

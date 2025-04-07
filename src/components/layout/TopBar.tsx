@@ -1,4 +1,3 @@
-import React from 'react';
 import { Bell, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +8,7 @@ interface Notification {
 }
 
 export function TopBar() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
 
