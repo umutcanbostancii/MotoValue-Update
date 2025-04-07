@@ -1,5 +1,3 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
 import { Calculator, Users, TrendingUp, Bike } from 'lucide-react';
 
 export function Dashboard() {

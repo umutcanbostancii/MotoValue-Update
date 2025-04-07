@@ -1,6 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bike, Calculator, Shield, TrendingUp, Users, MessageSquare, Brain, Building } from 'lucide-react';
+import { Bike, Calculator, Shield, TrendingUp, Users, MessageSquare, Building } from 'lucide-react';
 
 const features = [
   {
@@ -25,24 +24,6 @@ const stats = [
   { value: '5000+', label: 'Aylık İşlem', icon: TrendingUp },
   { value: '15K+', label: 'Kayıtlı Kullanıcı', icon: Users },
   { value: '98%', label: 'Müşteri Memnuniyeti', icon: MessageSquare }
-];
-
-const aiFeatures = [
-  {
-    title: 'Yapay Zeka Destekli Fiyatlama',
-    description: 'Gelişmiş makine öğrenmesi algoritmaları ile anlık ve doğru fiyat tahminleri',
-    icon: Brain
-  },
-  {
-    title: 'Akıllı Eşleştirme',
-    description: 'Alıcı ve satıcıları otomatik olarak eşleştiren yapay zeka sistemi',
-    icon: Users
-  },
-  {
-    title: 'Piyasa Trend Analizi',
-    description: 'Gelecek fiyat tahminleri ve piyasa trend analizleri',
-    icon: TrendingUp
-  }
 ];
 
 export function Landing() {

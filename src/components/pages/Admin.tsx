@@ -1,4 +1,3 @@
-import React from 'react';
 import { ShieldCheck, Users, Settings as SettingsIcon, TrendingUp } from 'lucide-react';
 
 export function Admin() {

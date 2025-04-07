@@ -1,4 +1,3 @@
-import React from 'react';
 import { History as HistoryIcon, ArrowRight } from 'lucide-react';
 
 // Geçmiş hesaplamaları temsil eden örnek veri

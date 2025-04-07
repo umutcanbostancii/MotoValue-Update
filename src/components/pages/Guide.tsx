@@ -1,4 +1,3 @@
-import React from 'react';
 import { HelpCircle, CheckCircle } from 'lucide-react';
 
 // Hesaplama adımlarını temsil eden veri

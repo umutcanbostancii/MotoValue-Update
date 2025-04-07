@@ -3,26 +3,6 @@ import { Calculator as CalcIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
-
-interface Motorcycle {
-  id: string;
-  brand: string;
-  model: string;
-  year: number;
-  category: string;
-  condition: string;
-  mileage: number;
-  engine_power: string;
-  engine_cc: string;
-  timing_type: string;
-  cylinder_count: string;
-  transmission: string;
-  cooling: string;
-  color: string;
-  origin: string;
-  tradeable: boolean;
-}
 
 interface TechnicalFeatures {
   abs: boolean;
@@ -120,7 +100,6 @@ export function Calculator() {
   });
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
   const navigate = useNavigate();
 
@@ -131,7 +110,6 @@ export function Calculator() {
   const fetchMotorcycles = async () => {
     try {
       setLoading(true);
-      setError(null);
 
       const { data, error: fetchError } = await supabase
         .from('motorcycles')
@@ -152,7 +130,7 @@ export function Calculator() {
 
     } catch (err) {
       console.error('Error details:', err);
-      setError(err instanceof Error ? err.message : 'Veri yüklenirken bir hata oluştu');
+      toast.error(err instanceof Error ? err.message : 'Veri yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
     }

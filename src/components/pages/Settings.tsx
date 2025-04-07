@@ -1,5 +1,4 @@
-import React from 'react';
-import { Settings as SettingsIcon, Moon, Sun, Bell } from 'lucide-react';
+import { Settings as SettingsIcon, Sun, Bell } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export function Settings() {
