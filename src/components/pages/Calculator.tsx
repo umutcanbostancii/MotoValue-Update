@@ -110,26 +110,34 @@ export function Calculator() {
   const fetchMotorcycles = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Fetching motorcycles...');
 
       const { data, error: fetchError } = await supabase
         .from('motorcycles')
         .select('*')
         .order('brand', { ascending: true });
 
+      console.log('📊 Supabase response:', { data, error: fetchError });
+
       if (fetchError) {
-        console.error('Supabase error:', fetchError);
+        console.error('❌ Supabase error:', fetchError);
         throw new Error(fetchError.message);
       }
 
       if (!data) {
+        console.error('❌ No data returned from Supabase');
         throw new Error('No data returned from Supabase');
       }
 
+      console.log('✅ Data received:', data.length, 'motorcycles');
+      console.log('📋 Sample data:', data.slice(0, 3));
+
       const uniqueBrands = Array.from(new Set(data.map(m => m.brand))).sort();
+      console.log('🏷️ Unique brands:', uniqueBrands);
       setBrands(uniqueBrands);
 
     } catch (err) {
-      console.error('Error details:', err);
+      console.error('💥 Error details:', err);
       toast.error(err instanceof Error ? err.message : 'Veri yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
@@ -137,18 +145,32 @@ export function Calculator() {
   };
 
   const handleBrandChange = async (brand: string) => {
+    console.log('🏷️ Brand selected:', brand);
     setSelectedBrand(brand);
     setSelectedModel('');
     
-    const { data } = await supabase
+    if (!brand) {
+      console.log('❌ No brand selected, clearing models');
+      setModels([]);
+      return;
+    }
+    
+    console.log('🔍 Fetching models for brand:', brand);
+    const { data, error } = await supabase
       .from('motorcycles')
       .select('model')
       .eq('brand', brand)
       .order('model', { ascending: true });
 
+    console.log('📊 Models response:', { data, error });
+
     if (data) {
       const uniqueModels = Array.from(new Set(data.map((m: { model: string }) => m.model))).sort();
+      console.log('🏍️ Unique models:', uniqueModels);
       setModels(uniqueModels);
+    } else {
+      console.log('❌ No models found for brand:', brand);
+      setModels([]);
     }
   };
 
@@ -162,19 +184,20 @@ export function Calculator() {
     try {
       await handleCalculate();
       
-      // Motosiklet ID'sini al
-      const { data: motorcycleData } = await supabase
-        .from('motorcycles')
-        .select('id')
-        .eq('brand', selectedBrand)
-        .eq('model', selectedModel)
-        .eq('year', parseInt(selectedYear, 10))
-        .single();
+      // Geçici olarak navigation'ı devre dışı bırakıyoruz
+      // // Motosiklet ID'sini al
+      // const { data: motorcycleData } = await supabase
+      //   .from('motorcycles')
+      //   .select('id')
+      //   .eq('brand', selectedBrand)
+      //   .eq('model', selectedModel)
+      //   .eq('year', parseInt(selectedYear, 10))
+      //   .single();
       
-      if (motorcycleData?.id) {
-        // Detaylı sonuç sayfasına yönlendir
-        navigate(`/dashboard/calculate/result?id=${motorcycleData.id}&mileage=${mileage}&condition=${condition}&damageStatus=${encodeURIComponent(JSON.stringify(damageStatus))}`);
-      }
+      // if (motorcycleData?.id) {
+      //   // Detaylı sonuç sayfasına yönlendir
+      //   navigate(`/dashboard/calculate/result?id=${motorcycleData.id}&mileage=${mileage}&condition=${condition}&damageStatus=${encodeURIComponent(JSON.stringify(damageStatus))}`);
+      // }
     } catch (error) {
       console.error(error);
     } finally {
@@ -204,34 +227,59 @@ export function Calculator() {
         return;
       }
 
-      // Mevcut kullanıcıyı al
-      const userResponse = await supabase.auth.getUser();
-      if (userResponse.error) {
-        toast.error('Kullanıcı bilgisi alınamadı');
-        return;
-      }
+      // Geçici olarak kullanıcı kontrolünü bypass ediyoruz
+      // const userResponse = await supabase.auth.getUser();
+      // if (userResponse.error) {
+      //   toast.error('Kullanıcı bilgisi alınamadı');
+      //   return;
+      // }
 
-      const user = userResponse.data.user;
-      if (!user) {
-        toast.error('Lütfen giriş yapınız');
-        return;
-      }
+      // const user = userResponse.data.user;
+      // if (!user) {
+      //   toast.error('Lütfen giriş yapınız');
+      //   return;
+      // }
 
-      // 1. Önce motosiklet ID'sini bul
-      const { data: motorcycleData, error: motorcycleError } = await supabase
+      // Test için dummy user ID
+      const dummyUserId = 'test-user-id';
+
+      // 1. Önce motosiklet ID'sini bul - yıl kontrolü olmadan
+      console.log('🔍 Searching motorcycle:', { selectedBrand, selectedModel, yearValue });
+      
+      let { data: motorcycleData, error: motorcycleError } = await supabase
         .from('motorcycles')
-        .select('id')
+        .select('id, brand, model, year, price')
         .eq('brand', selectedBrand)
         .eq('model', selectedModel)
-        .eq('year', yearValue)
+        .limit(1)
         .single();
 
+      console.log('🏍️ Motorcycle search result:', { motorcycleData, motorcycleError });
+
       if (motorcycleError || !motorcycleData) {
-        toast.error('Motosiklet bilgisi bulunamadı');
-        return;
+        console.error('❌ Motorcycle not found, trying alternative search...');
+        
+        // Alternatif arama: model adında kısmi eşleşme
+        const { data: alternativeData, error: alternativeError } = await supabase
+          .from('motorcycles')
+          .select('id, brand, model, year, price')
+          .eq('brand', selectedBrand)
+          .ilike('model', `%${selectedModel}%`)
+          .limit(1)
+          .single();
+          
+        console.log('🔄 Alternative search result:', { alternativeData, alternativeError });
+        
+        if (alternativeError || !alternativeData) {
+          toast.error(`Motosiklet bilgisi bulunamadı: ${selectedBrand} ${selectedModel}`);
+          return;
+        }
+        
+        motorcycleData = alternativeData;
       }
 
       const motorcycleId = motorcycleData.id;
+      console.log('✅ Using motorcycle ID:', motorcycleId);
 
       // 2. RPC fonksiyonunu çağır
       console.log('Gönderilen damageStatus:', damageStatus);
@@ -253,26 +301,26 @@ export function Calculator() {
         throw new Error('Hesaplama yapılamadı');
       }
 
-      // 3. Sonucu price_calculations tablosuna kaydet
-      const calculationRecord = {
-        motorcycle_id: motorcycleId,
-        user_id: user.id,
-        mileage: parseInt(mileage),
-        condition: condition,
-        calculated_price: calculationData.calculated_price,
-        technical_features: technicalFeatures,
-        accessories: accessories,
-        damage_status: damageStatus
-      };
+      // 3. Sonucu price_calculations tablosuna kaydet (geçici olarak devre dışı)
+      // const calculationRecord = {
+      //   motorcycle_id: motorcycleId,
+      //   user_id: dummyUserId,
+      //   mileage: parseInt(mileage),
+      //   condition: condition,
+      //   calculated_price: calculationData.calculated_price,
+      //   technical_features: technicalFeatures,
+      //   accessories: accessories,
+      //   damage_status: damageStatus
+      // };
 
-      const { error: insertError } = await supabase
-        .from('price_calculations')
-        .insert(calculationRecord);
+      // const { error: insertError } = await supabase
+      //   .from('price_calculations')
+      //   .insert(calculationRecord);
 
-      if (insertError) {
-        console.error('Kayıt hatası:', insertError);
-        // Kayıt hatası olsa bile hesaplanan fiyatı göster
-      }
+      // if (insertError) {
+      //   console.error('Kayıt hatası:', insertError);
+      //   // Kayıt hatası olsa bile hesaplanan fiyatı göster
+      // }
 
       // Hesaplama sonucunu state'e kaydet
       setCalculatedPrice(calculationData.calculated_price);
@@ -313,12 +361,15 @@ export function Calculator() {
                   className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={selectedBrand}
                   onChange={(e) => handleBrandChange(e.target.value)}
+                  disabled={loading}
                 >
-                  <option value="">Seçiniz</option>
+                  <option value="">{loading ? 'Yükleniyor...' : 'Seçiniz'}</option>
                   {brands.map((b) => (
                     <option key={b} value={b} className="text-white bg-gray-700">{b}</option>
                   ))}
                 </select>
+                {loading && <div className="text-xs text-gray-400 mt-1">Markalar yükleniyor...</div>}
+                {!loading && brands.length === 0 && <div className="text-xs text-red-400 mt-1">Marka bulunamadı</div>}
               </div>
 
               <div>
@@ -327,12 +378,14 @@ export function Calculator() {
                   className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={selectedModel}
                   onChange={(e) => handleModelChange(e.target.value)}
+                  disabled={!selectedBrand}
                 >
-                  <option value="">Seçiniz</option>
+                  <option value="">{!selectedBrand ? 'Önce marka seçiniz' : 'Seçiniz'}</option>
                   {models.map((m) => (
                     <option key={m} value={m} className="text-white bg-gray-700">{m}</option>
                   ))}
                 </select>
+                {selectedBrand && models.length === 0 && <div className="text-xs text-red-400 mt-1">Bu marka için model bulunamadı</div>}
               </div>
 
               <div>

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface ProtectedRouteProps {
@@ -7,15 +6,12 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) {
     return <div>Yükleniyor...</div>;
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
+  // Geçici olarak authentication kontrolünü bypass ediyoruz
   return <>{children}</>;
 }; 
