@@ -1,8 +1,31 @@
 import { useState, useEffect } from 'react';
-import { Calculator as CalcIcon } from 'lucide-react';
+import { Calculator as CalcIcon, Search, ChevronDown, ChevronUp, ExternalLink, MapPin, Calendar, Gauge, Eye, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+
+interface Motorcycle {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  category: string;
+  price: string;
+  color_options?: string[];
+}
+
+interface SearchResult {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  price: string;
+  mileage: number;
+  location: string;
+  date: string;
+  image: string;
+  title: string;
+  link: string;
+}
 
 interface TechnicalFeatures {
   abs: boolean;
@@ -35,29 +58,36 @@ interface DamageStatus {
   [key: string]: { status: string };
 }
 
+interface PriceResult {
+  sahibindenAverage: number;
+  algorithmResult: number;
+  finalResult: number;
+}
+
 export function Calculator() {
-  // Temel bilgiler state'leri
+  // Seçim state'leri
   const [brands, setBrands] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
+  const [subModels, setSubModels] = useState<string[]>([]);
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedSubModel, setSelectedSubModel] = useState('');
+  
+  // Arama sonuçları
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [selectedCard, setSelectedCard] = useState<SearchResult | null>(null);
+  const [showCardDetail, setShowCardDetail] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searching, setSearching] = useState(false);
+
+  // Dropdown state'leri
+  const [showTechnical, setShowTechnical] = useState(false);
+  const [showFeatures, setShowFeatures] = useState(false);
+  const [showDamage, setShowDamage] = useState(false);
+
+  // Form state'leri
   const [mileage, setMileage] = useState('');
   const [condition, setCondition] = useState('');
-
-  // Teknik özellikler state'leri
-  const [enginePower, setEnginePower] = useState('');
-  const [engineCC, setEngineCC] = useState('');
-  const [timingType, setTimingType] = useState('');
-  const [cylinderCount, setCylinderCount] = useState('');
-  const [transmission, setTransmission] = useState('');
-  const [cooling, setCooling] = useState('');
-  const [color, setColor] = useState('');
-  const [origin, setOrigin] = useState('');
-  const [tradeable, setTradeable] = useState(false);
-
-  // Güvenlik özellikleri state'i
   const [technicalFeatures, setTechnicalFeatures] = useState<TechnicalFeatures>({
     abs: false,
     airbag: false,
@@ -70,7 +100,6 @@ export function Calculator() {
     front_protection: false,
   });
 
-  // Aksesuar state'i
   const [accessories, setAccessories] = useState<Accessories>({
     heated_grips: false,
     rear_carrier: false,
@@ -86,7 +115,6 @@ export function Calculator() {
     double_stand: false,
   });
 
-  // Hasar/Tramer durumu state'i
   const [damageStatus, setDamageStatus] = useState<DamageStatus>({
     chassis: { status: 'Orijinal' },
     engine: { status: 'Orijinal' },
@@ -99,109 +127,145 @@ export function Calculator() {
     exhaust: { status: 'Orijinal' },
   });
 
-  const [loading, setLoading] = useState(true);
-  const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
-  const navigate = useNavigate();
+  // Fiyat hesaplama
+  const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
+  const [calculating, setCalculating] = useState(false);
 
   useEffect(() => {
-    fetchMotorcycles();
+    fetchBrands();
   }, []);
 
-  const fetchMotorcycles = async () => {
+  const fetchBrands = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Fetching motorcycles...');
-
-      const { data, error: fetchError } = await supabase
+      const { data, error } = await supabase
         .from('motorcycles')
-        .select('*')
+        .select('brand')
         .order('brand', { ascending: true });
 
-      console.log('📊 Supabase response:', { data, error: fetchError });
-
-      if (fetchError) {
-        console.error('❌ Supabase error:', fetchError);
-        throw new Error(fetchError.message);
-      }
-
-      if (!data) {
-        console.error('❌ No data returned from Supabase');
-        throw new Error('No data returned from Supabase');
-      }
-
-      console.log('✅ Data received:', data.length, 'motorcycles');
-      console.log('📋 Sample data:', data.slice(0, 3));
+      if (error) throw error;
 
       const uniqueBrands = Array.from(new Set(data.map(m => m.brand))).sort();
-      console.log('🏷️ Unique brands:', uniqueBrands);
       setBrands(uniqueBrands);
-
-    } catch (err) {
-      console.error('💥 Error details:', err);
-      toast.error(err instanceof Error ? err.message : 'Veri yüklenirken bir hata oluştu');
+    } catch (error) {
+      console.error('Markalar yüklenirken hata:', error);
+      toast.error('Markalar yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBrandChange = async (brand: string) => {
-    console.log('🏷️ Brand selected:', brand);
+  const handleBrandSelect = async (brand: string) => {
     setSelectedBrand(brand);
     setSelectedModel('');
-    
-    if (!brand) {
-      console.log('❌ No brand selected, clearing models');
-      setModels([]);
+    setSelectedSubModel('');
+    setModels([]);
+    setSubModels([]);
+
+    try {
+      const { data, error } = await supabase
+        .from('motorcycles')
+        .select('model')
+        .eq('brand', brand)
+        .order('model', { ascending: true });
+
+      if (error) throw error;
+
+      const uniqueModels = Array.from(new Set(data.map(m => m.model))).sort();
+      setModels(uniqueModels);
+    } catch (error) {
+      console.error('Modeller yüklenirken hata:', error);
+      toast.error('Modeller yüklenirken bir hata oluştu');
+    }
+  };
+
+  const handleModelSelect = async (model: string) => {
+    setSelectedModel(model);
+    setSelectedSubModel('');
+    setSubModels([]);
+
+    try {
+      const { data, error } = await supabase
+        .from('motorcycles')
+        .select('model')
+        .eq('brand', selectedBrand)
+        .ilike('model', `%${model}%`)
+        .order('model', { ascending: true });
+
+      if (error) throw error;
+
+      const variants = data
+        .map(m => m.model)
+        .filter(m => m !== model && m.includes(model))
+        .slice(0, 5);
+
+      if (variants.length > 0) {
+        setSubModels(variants);
+      }
+    } catch (error) {
+      console.error('Alt modeller yüklenirken hata:', error);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!selectedBrand || !selectedModel) {
+      toast.error('Lütfen marka ve model seçiniz');
       return;
     }
-    
-    console.log('🔍 Fetching models for brand:', brand);
-    const { data, error } = await supabase
-      .from('motorcycles')
-      .select('model')
-      .eq('brand', brand)
-      .order('model', { ascending: true });
 
-    console.log('📊 Models response:', { data, error });
-
-    if (data) {
-      const uniqueModels = Array.from(new Set(data.map((m: { model: string }) => m.model))).sort();
-      console.log('🏍️ Unique models:', uniqueModels);
-      setModels(uniqueModels);
-    } else {
-      console.log('❌ No models found for brand:', brand);
-      setModels([]);
-    }
-  };
-
-  const handleModelChange = (model: string) => {
-    setSelectedModel(model);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    setSearching(true);
     try {
-      await handleCalculate();
+      const mockResults: SearchResult[] = [
+        {
+          id: '1',
+          brand: selectedBrand,
+          model: selectedModel,
+          year: 2023,
+          price: '450.000 ₺',
+          mileage: 5000,
+          location: 'İstanbul, Kadıköy',
+          date: '2 gün önce',
+          image: '/api/placeholder/300/200',
+          title: `${selectedBrand} ${selectedModel} - Temiz Araç`,
+          link: 'https://sahibinden.com/ilan/vasita-motosiklet-honda-cbr-650r-1234567'
+        },
+        {
+          id: '2',
+          brand: selectedBrand,
+          model: selectedModel,
+          year: 2022,
+          price: '420.000 ₺',
+          mileage: 12000,
+          location: 'Ankara, Çankaya',
+          date: '1 hafta önce',
+          image: '/api/placeholder/300/200',
+          title: `${selectedBrand} ${selectedModel} - Az Kullanılmış`,
+          link: 'https://sahibinden.com/ilan/vasita-motosiklet-honda-cbr-650r-1234568'
+        },
+        {
+          id: '3',
+          brand: selectedBrand,
+          model: selectedModel,
+          year: 2021,
+          price: '380.000 ₺',
+          mileage: 25000,
+          location: 'İzmir, Bornova',
+          date: '3 gün önce',
+          image: '/api/placeholder/300/200',
+          title: `${selectedBrand} ${selectedModel} - Bakımlı`,
+          link: 'https://sahibinden.com/ilan/vasita-motosiklet-honda-cbr-650r-1234569'
+        }
+      ];
+
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Geçici olarak navigation'ı devre dışı bırakıyoruz
-      // // Motosiklet ID'sini al
-      // const { data: motorcycleData } = await supabase
-      //   .from('motorcycles')
-      //   .select('id')
-      //   .eq('brand', selectedBrand)
-      //   .eq('model', selectedModel)
-      //   .eq('year', parseInt(selectedYear, 10))
-      //   .single();
-      
-      // if (motorcycleData?.id) {
-      //   // Detaylı sonuç sayfasına yönlendir
-      //   navigate(`/dashboard/calculate/result?id=${motorcycleData.id}&mileage=${mileage}&condition=${condition}&damageStatus=${encodeURIComponent(JSON.stringify(damageStatus))}`);
-      // }
+      setSearchResults(mockResults);
+      toast.success(`${mockResults.length} ilan bulundu`);
     } catch (error) {
-      console.error(error);
+      console.error('Arama hatası:', error);
+      toast.error('Arama sırasında bir hata oluştu');
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
   };
 
@@ -212,41 +276,16 @@ export function Calculator() {
     }));
   };
 
-  const handleCalculate = async () => {
+  const handleCalculatePrice = async () => {
+    if (!selectedBrand || !selectedModel || !mileage || !condition) {
+      toast.error('Lütfen gerekli alanları doldurunuz');
+      return;
+    }
+
+    setCalculating(true);
     try {
-      // Gerekli alanların kontrolü
-      if (!selectedBrand || !selectedModel || !selectedYear || !mileage || !condition) {
-        toast.error('Lütfen gerekli alanları doldurunuz');
-        return;
-      }
-
-      // Yıl değerini kontrol et
-      const yearValue = parseInt(selectedYear, 10);
-      if (isNaN(yearValue) || yearValue <= 0) {
-        toast.error('Geçerli bir yıl değeri giriniz');
-        return;
-      }
-
-      // Geçici olarak kullanıcı kontrolünü bypass ediyoruz
-      // const userResponse = await supabase.auth.getUser();
-      // if (userResponse.error) {
-      //   toast.error('Kullanıcı bilgisi alınamadı');
-      //   return;
-      // }
-
-      // const user = userResponse.data.user;
-      // if (!user) {
-      //   toast.error('Lütfen giriş yapınız');
-      //   return;
-      // }
-
-      // Test için dummy user ID
-      const dummyUserId = 'test-user-id';
-
-      // 1. Önce motosiklet ID'sini bul - yıl kontrolü olmadan
-      console.log('🔍 Searching motorcycle:', { selectedBrand, selectedModel, yearValue });
-      
-      let { data: motorcycleData, error: motorcycleError } = await supabase
+      // Motosiklet ID'sini bul
+      const { data: motorcycleData, error: motorcycleError } = await supabase
         .from('motorcycles')
         .select('id, brand, model, year, price')
         .eq('brand', selectedBrand)
@@ -254,46 +293,21 @@ export function Calculator() {
         .limit(1)
         .single();
 
-      console.log('🏍️ Motorcycle search result:', { motorcycleData, motorcycleError });
-
       if (motorcycleError || !motorcycleData) {
-        console.error('❌ Motorcycle not found, trying alternative search...');
-        
-        // Alternatif arama: model adında kısmi eşleşme
-        const { data: alternativeData, error: alternativeError } = await supabase
-          .from('motorcycles')
-          .select('id, brand, model, year, price')
-          .eq('brand', selectedBrand)
-          .ilike('model', `%${selectedModel}%`)
-          .limit(1)
-          .single();
-          
-        console.log('🔄 Alternative search result:', { alternativeData, alternativeError });
-        
-        if (alternativeError || !alternativeData) {
-          toast.error(`Motosiklet bilgisi bulunamadı: ${selectedBrand} ${selectedModel}`);
-          return;
-        }
-        
-        motorcycleData = alternativeData;
+        toast.error(`Motosiklet bilgisi bulunamadı: ${selectedBrand} ${selectedModel}`);
+        return;
       }
 
-      const motorcycleId = motorcycleData.id;
-      console.log('✅ Using motorcycle ID:', motorcycleId);
-
-      // 2. RPC fonksiyonunu çağır
-      console.log('Gönderilen damageStatus:', damageStatus);
-      
+      // RPC fonksiyonunu çağır
       const { data: calculationData, error: calculationError } = await supabase
         .rpc('calculate_motorcycle_price', {
-          input_motorcycle_id: motorcycleId,
+          input_motorcycle_id: motorcycleData.id,
           input_mileage: parseInt(mileage, 10),
           input_condition: condition,
           input_damage_status: damageStatus
         });
 
       if (calculationError) {
-        console.error('RPC error details:', calculationError);
         throw new Error(calculationError.message);
       }
 
@@ -301,129 +315,368 @@ export function Calculator() {
         throw new Error('Hesaplama yapılamadı');
       }
 
-      // 3. Sonucu price_calculations tablosuna kaydet (geçici olarak devre dışı)
-      // const calculationRecord = {
-      //   motorcycle_id: motorcycleId,
-      //   user_id: dummyUserId,
-      //   mileage: parseInt(mileage),
-      //   condition: condition,
-      //   calculated_price: calculationData.calculated_price,
-      //   technical_features: technicalFeatures,
-      //   accessories: accessories,
-      //   damage_status: damageStatus
-      // };
+      // Sahibinden ortalaması (statik)
+      const sahibindenAverage = 425000;
+      const algorithmResult = calculationData.calculated_price;
+      const finalResult = Math.round((sahibindenAverage + algorithmResult) / 2);
 
-      // const { error: insertError } = await supabase
-      //   .from('price_calculations')
-      //   .insert(calculationRecord);
+      setPriceResult({
+        sahibindenAverage,
+        algorithmResult,
+        finalResult
+      });
 
-      // if (insertError) {
-      //   console.error('Kayıt hatası:', insertError);
-      //   // Kayıt hatası olsa bile hesaplanan fiyatı göster
-      // }
-
-      // Hesaplama sonucunu state'e kaydet
-      setCalculatedPrice(calculationData.calculated_price);
-      
-      // Başarı mesajı göster
-      toast.success(`Hesaplanan Fiyat: ${new Intl.NumberFormat('tr-TR', {
-        style: 'currency',
-        currency: 'TRY'
-      }).format(calculationData.calculated_price)}`);
-
+      toast.success('Fiyat hesaplama tamamlandı!');
     } catch (error: any) {
-      if (error.message === 'Timeout') {
-        toast.error('İşlem zaman aşımına uğradı, lütfen tekrar deneyiniz');
-      } else {
-        console.error('Hesaplama hatası:', error);
-        toast.error(error.message || 'Fiyat hesaplanırken bir hata oluştu');
-      }
-      throw error;
+      console.error('Hesaplama hatası:', error);
+      toast.error(error.message || 'Fiyat hesaplanırken bir hata oluştu');
+    } finally {
+      setCalculating(false);
     }
+  };
+
+  const resetSelection = () => {
+    setSelectedBrand('');
+    setSelectedModel('');
+    setSelectedSubModel('');
+    setModels([]);
+    setSubModels([]);
+    setSearchResults([]);
+    setPriceResult(null);
   };
 
   return (
     <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
           <CalcIcon className="h-6 w-6 inline-block mr-2" />
           Fiyat Hesapla
         </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Temel Bilgiler */}
-          <div className="bg-gray-800/50 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Temel Bilgiler</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Marka</label>
-                <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={selectedBrand}
-                  onChange={(e) => handleBrandChange(e.target.value)}
-                  disabled={loading}
+        {/* Marka/Model/Alt Model Seçimi */}
+        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Motosiklet Seçimi</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Markalar */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Markalar</h3>
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto border border-gray-200 dark:border-gray-600">
+                {loading ? (
+                  <div className="text-gray-500 dark:text-gray-400">Yükleniyor...</div>
+                ) : (
+                  <div className="space-y-2">
+                    {brands.map((brand) => (
+                      <button
+                        key={brand}
+                        onClick={() => handleBrandSelect(brand)}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                          selectedBrand === brand
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {brand}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modeller */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Modeller</h3>
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto border border-gray-200 dark:border-gray-600">
+                {!selectedBrand ? (
+                  <div className="text-gray-500 dark:text-gray-400">Önce marka seçiniz</div>
+                ) : models.length === 0 ? (
+                  <div className="text-gray-500 dark:text-gray-400">Model bulunamadı</div>
+                ) : (
+                  <div className="space-y-2">
+                    {models.map((model) => (
+                      <button
+                        key={model}
+                        onClick={() => handleModelSelect(model)}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                          selectedModel === model
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {model}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Alt Modeller */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Varyantlar</h3>
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto border border-gray-200 dark:border-gray-600">
+                {!selectedModel ? (
+                  <div className="text-gray-500 dark:text-gray-400">Önce model seçiniz</div>
+                ) : subModels.length === 0 ? (
+                  <div className="text-gray-500 dark:text-gray-400">Varyant bulunamadı</div>
+                ) : (
+                  <div className="space-y-2">
+                    {subModels.map((subModel) => (
+                      <button
+                        key={subModel}
+                        onClick={() => setSelectedSubModel(subModel)}
+                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                          selectedSubModel === subModel
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {subModel}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Ara Butonu */}
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={handleSearch}
+              disabled={!selectedBrand || !selectedModel || searching}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              {searching ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Aranıyor...
+                </>
+              ) : (
+                <>
+                  <Search className="h-5 w-5" />
+                  Ara
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Seçilen Motor Bilgisi */}
+          {(selectedBrand || selectedModel) && (
+            <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+              <div className="flex justify-between items-center">
+                <div className="text-gray-900 dark:text-white">
+                  <strong>Seçilen:</strong> {selectedBrand} {selectedModel} {selectedSubModel}
+                </div>
+                <button
+                  onClick={resetSelection}
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
                 >
-                  <option value="">{loading ? 'Yükleniyor...' : 'Seçiniz'}</option>
-                  {brands.map((b) => (
-                    <option key={b} value={b} className="text-white bg-gray-700">{b}</option>
-                  ))}
-                </select>
-                {loading && <div className="text-xs text-gray-400 mt-1">Markalar yükleniyor...</div>}
-                {!loading && brands.length === 0 && <div className="text-xs text-red-400 mt-1">Marka bulunamadı</div>}
+                  Temizle
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* İki Ayrı Sonuç Alanı */}
+        {searchResults.length > 0 && (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            {/* Bizim Aramamız */}
+            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Bizim Aramamız</h2>
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  {selectedBrand} {selectedModel} {selectedSubModel}
+                </h3>
+                <div className="text-gray-700 dark:text-gray-300 space-y-1">
+                  <p><strong>Marka:</strong> {selectedBrand}</p>
+                  <p><strong>Model:</strong> {selectedModel}</p>
+                  {selectedSubModel && <p><strong>Varyant:</strong> {selectedSubModel}</p>}
+                  <p><strong>Durum:</strong> Arama yapıldı</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sahibinden Sonuçlar */}
+            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                Sahibinden Sonuçlar ({searchResults.length} ilan)
+              </h2>
+              
+              <div className="space-y-6 max-h-[500px] overflow-y-auto">
+                {searchResults.map((result) => (
+                  <div
+                    key={result.id}
+                    className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
+                  >
+                    <div className="flex gap-6">
+                      {/* Sol taraf - Bilgiler */}
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-semibold text-gray-900 dark:text-white text-lg leading-tight">
+                            {result.title}
+                          </h3>
+                          <span className="text-sm text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full">
+                            {result.year}
+                          </span>
+                        </div>
+                        
+                        <div className="text-2xl font-bold text-green-600 dark:text-green-500 mb-4">
+                          {result.price}
+                        </div>
+
+                        <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300 mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full">
+                              <Gauge className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                              <span>{result.mileage.toLocaleString()} km</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full">
+                              <MapPin className="h-4 w-4 text-red-500 dark:text-red-400" />
+                              <span>{result.location}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full">
+                              <Calendar className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
+                              <span>{result.date}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => {
+                              setSelectedCard(result);
+                              setShowCardDetail(true);
+                            }}
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Detayları Gör
+                          </button>
+                          
+                          <a
+                            href={result.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 bg-gray-500 dark:bg-gray-600 hover:bg-gray-600 dark:hover:bg-gray-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Sahibinden'de Gör
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Sağ taraf - Motor Görseli */}
+                      <div className="w-48 h-36 flex-shrink-0">
+                        <img
+                          src="/src/moto-image.jpg"
+                          alt={result.title}
+                          className="w-full h-full object-cover rounded-lg border-2 border-gray-300 dark:border-gray-500 shadow-lg"
+                          onError={(e) => {
+                            e.currentTarget.src = "/src/moto-image.jpg";
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Kart Detay Modal */}
+        {showCardDetail && selectedCard && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">İlan Detayı</h2>
+                <button
+                  onClick={() => setShowCardDetail(false)}
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Model</label>
-                <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={selectedModel}
-                  onChange={(e) => handleModelChange(e.target.value)}
-                  disabled={!selectedBrand}
-                >
-                  <option value="">{!selectedBrand ? 'Önce marka seçiniz' : 'Seçiniz'}</option>
-                  {models.map((m) => (
-                    <option key={m} value={m} className="text-white bg-gray-700">{m}</option>
-                  ))}
-                </select>
-                {selectedBrand && models.length === 0 && <div className="text-xs text-red-400 mt-1">Bu marka için model bulunamadı</div>}
-              </div>
+              <div className="p-6">
+                <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 relative border border-gray-200 dark:border-gray-600">
+                  <img
+                    src="/src/moto-image.jpg"
+                    alt={selectedCard.title}
+                    className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = "/src/moto-image.jpg";
+                    }}
+                  />
+                  <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm">
+                    {selectedCard.year}
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Kategori</label>
-                <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                  <option value="">Seçiniz</option>
-                  <option value="sport">Sport</option>
-                  <option value="naked">Naked</option>
-                  <option value="touring">Touring</option>
-                  <option value="cruiser">Cruiser</option>
-                  <option value="enduro">Enduro</option>
-                  <option value="scooter">Scooter</option>
-                </select>
-              </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  {selectedCard.title}
+                </h3>
+                
+                <div className="text-3xl font-bold text-green-600 dark:text-green-500 mb-6">
+                  {selectedCard.price}
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Yıl</label>
-                <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                >
-                  <option value="">Seçiniz</option>
-                  {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                    <option key={year} value={year} className="text-white bg-gray-700">{year}</option>
-                  ))}
-                </select>
-              </div>
+                <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300 mb-6">
+                  <div className="flex items-center gap-2">
+                    <Gauge className="h-5 w-5" />
+                    <span>{selectedCard.mileage.toLocaleString()} km</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5" />
+                    <span>{selectedCard.location}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    <span>{selectedCard.date}</span>
+                  </div>
 
+                  <div className="text-gray-700 dark:text-gray-300">
+                    <strong>Marka:</strong> {selectedCard.brand}
+                  </div>
+                </div>
+
+                <a
+                  href={selectedCard.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  <ExternalLink className="h-5 w-5" />
+                  Sahibinden'de Gör
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Teknik Özellikler ve Fiyat Hesaplama */}
+        {searchResults.length > 0 && (
+          <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Fiyat Hesaplama</h2>
+
+            {/* Temel Bilgiler */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Kilometre</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kilometre</label>
                 <input
                   type="number"
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={mileage}
                   onChange={(e) => setMileage(e.target.value)}
                   placeholder="Kilometre giriniz"
@@ -431,9 +684,9 @@ export function Calculator() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Durum</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Durum</label>
                 <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={condition}
                   onChange={(e) => setCondition(e.target.value)}
                 >
@@ -446,263 +699,215 @@ export function Calculator() {
                 </select>
               </div>
             </div>
-          </div>
 
-          {/* Teknik Özellikler */}
-          <div className="bg-gray-800/50 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Teknik Özellikler</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Motor Gücü</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={enginePower}
-                  onChange={(e) => setEnginePower(e.target.value)}
+            {/* Teknik Özellikler Dropdown */}
+            <div className="space-y-4">
+              <div className="border border-gray-300 dark:border-gray-600 rounded-lg">
+                <button
+                  onClick={() => setShowTechnical(!showTechnical)}
+                  className="w-full flex items-center justify-between p-4 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <option value="">101 - 125 hp</option>
-                  <option value="126-150">126 - 150 hp</option>
-                  <option value="151-175">151 - 175 hp</option>
-                  <option value="176-200">176 - 200 hp</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Motor Hacmi</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={engineCC}
-                  onChange={(e) => setEngineCC(e.target.value)}
-                >
-                  <option value="">251 - 350 cm³</option>
-                  <option value="351-500">351 - 500 cm³</option>
-                  <option value="501-750">501 - 750 cm³</option>
-                  <option value="751-1000">751 - 1000 cm³</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Zamanlama Tipi</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={timingType}
-                  onChange={(e) => setTimingType(e.target.value)}
-                >
-                  <option value="4-stroke">4 Zamanlı</option>
-                  <option value="2-stroke">2 Zamanlı</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Silindir Sayısı</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={cylinderCount}
-                  onChange={(e) => setCylinderCount(e.target.value)}
-                >
-                  <option value="single">Tek Silindir</option>
-                  <option value="twin">Çift Silindir</option>
-                  <option value="triple">Üç Silindir</option>
-                  <option value="four">Dört Silindir</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Vites</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={transmission}
-                  onChange={(e) => setTransmission(e.target.value)}
-                >
-                  <option value="manual">Manuel</option>
-                  <option value="automatic">Otomatik</option>
-                  <option value="semi">Yarı Otomatik</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Soğutma</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={cooling}
-                  onChange={(e) => setCooling(e.target.value)}
-                >
-                  <option value="air">Hava</option>
-                  <option value="liquid">Sıvı</option>
-                  <option value="oil">Yağ</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Renk</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                >
-                  <option value="black">Siyah</option>
-                  <option value="white">Beyaz</option>
-                  <option value="red">Kırmızı</option>
-                  <option value="blue">Mavi</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Menşei</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={origin}
-                  onChange={(e) => setOrigin(e.target.value)}
-                >
-                  <option value="japan">Japonya</option>
-                  <option value="germany">Almanya</option>
-                  <option value="italy">İtalya</option>
-                  <option value="usa">ABD</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={tradeable}
-                  onChange={(e) => setTradeable(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Takasa Açık</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Özellikler */}
-          <div className="bg-gray-800/50 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Özellikler</h2>
-            
-            {/* Güvenlik */}
-            <div className="mb-6">
-              <h3 className="text-md font-medium text-gray-300 mb-3">Güvenlik</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(technicalFeatures).map(([key, value]) => (
-                  <label key={key} className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={value}
-                      onChange={(e) => setTechnicalFeatures(prev => ({
-                        ...prev,
-                        [key]: e.target.checked
-                      }))}
-                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                      {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Aksesuar */}
-            <div>
-              <h3 className="text-md font-medium text-gray-300 mb-3">Aksesuar</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(accessories).map(([key, value]) => (
-                  <label key={key} className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={value}
-                      onChange={(e) => setAccessories(prev => ({
-                        ...prev,
-                        [key]: e.target.checked
-                      }))}
-                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                      {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Hasar/Tramer Durumu */}
-          <div className="bg-gray-800/50 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Hasar/Tramer Durumu</h2>
-            <div className="grid grid-cols-1 gap-6">
-              {Object.entries(damageStatus).map(([key, value]) => {
-                // Türkçe parça isimleri
-                const partNames: {[key: string]: string} = {
-                  'chassis': 'Şasi',
-                  'engine': 'Motor',
-                  'transmission': 'Şanzıman',
-                  'frontFork': 'Ön Amortisör',
-                  'fuelTank': 'Yakıt Deposu',
-                  'electrical': 'Elektrik Sistemi',
-                  'frontPanel': 'Ön Panel',
-                  'rearPanel': 'Arka Panel',
-                  'exhaust': 'Egzoz'
-                };
+                  <span className="font-medium">Teknik Özellikler</span>
+                  {showTechnical ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </button>
                 
-                return (
-                  <div key={key} className="grid grid-cols-2 gap-4 items-center">
-                    <span className="text-sm font-medium text-gray-300">
-                      {partNames[key] || key}
-                    </span>
-                    <select
-                      className="rounded-md border border-gray-600 text-white bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={value.status}
-                      onChange={(e) => handleDamageStatusChange(key, e.target.value)}
-                    >
-                      <option value="Orijinal">Orijinal</option>
-                      <option value="Boyalı">Boyalı</option>
-                      <option value="Değişen">Değişen</option>
-                      <option value="Hasarlı">Hasarlı</option>
-                    </select>
+                {showTechnical && (
+                  <div className="p-4 border-t border-gray-300 dark:border-gray-600">
+                    <div className="text-gray-700 dark:text-gray-300 text-sm">
+                      Teknik özellikler buraya eklenecek (Motor gücü, hacmi, vites tipi vb.)
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Hesapla Butonu */}
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Hesaplanıyor...</span>
-                </>
-              ) : (
-                <>
-                  <CalcIcon className="h-5 w-5" />
-                  <span>Fiyat Hesapla</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Hesaplama Sonucu */}
-          {calculatedPrice !== null && (
-            <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-              <h2 className="text-lg font-semibold text-white mb-4">Hesaplama Sonucu</h2>
-              <div className="text-3xl font-bold text-green-500">
-                {new Intl.NumberFormat('tr-TR', {
-                  style: 'currency',
-                  currency: 'TRY',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(calculatedPrice)}
+                )}
               </div>
-              <p className="text-gray-400 mt-2">
-                {selectedYear} {selectedBrand} {selectedModel}
-              </p>
+
+              {/* Özellikler Dropdown */}
+              <div className="border border-gray-300 dark:border-gray-600 rounded-lg">
+                <button
+                  onClick={() => setShowFeatures(!showFeatures)}
+                  className="w-full flex items-center justify-between p-4 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <span className="font-medium">Güvenlik ve Aksesuar Özellikleri</span>
+                  {showFeatures ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </button>
+                
+                {showFeatures && (
+                  <div className="p-4 border-t border-gray-300 dark:border-gray-600 space-y-4">
+                    {/* Güvenlik */}
+                    <div>
+                      <h4 className="text-gray-900 dark:text-white font-medium mb-3">Güvenlik</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {Object.entries(technicalFeatures).map(([key, value]) => (
+                          <label key={key} className="inline-flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={value}
+                              onChange={(e) => setTechnicalFeatures(prev => ({
+                                ...prev,
+                                [key]: e.target.checked
+                              }))}
+                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                              {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Aksesuar */}
+                    <div>
+                      <h4 className="text-gray-900 dark:text-white font-medium mb-3">Aksesuar</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {Object.entries(accessories).map(([key, value]) => (
+                          <label key={key} className="inline-flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={value}
+                              onChange={(e) => setAccessories(prev => ({
+                                ...prev,
+                                [key]: e.target.checked
+                              }))}
+                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                              {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Hasar/Tramer Dropdown */}
+              <div className="border border-gray-300 dark:border-gray-600 rounded-lg">
+                <button
+                  onClick={() => setShowDamage(!showDamage)}
+                  className="w-full flex items-center justify-between p-4 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <span className="font-medium">Hasar/Tramer Durumu</span>
+                  {showDamage ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </button>
+                
+                {showDamage && (
+                  <div className="p-4 border-t border-gray-300 dark:border-gray-600">
+                    <div className="grid grid-cols-1 gap-4">
+                      {Object.entries(damageStatus).map(([key, value]) => {
+                        const partNames: {[key: string]: string} = {
+                          'chassis': 'Şasi',
+                          'engine': 'Motor',
+                          'transmission': 'Şanzıman',
+                          'frontFork': 'Ön Amortisör',
+                          'fuelTank': 'Yakıt Deposu',
+                          'electrical': 'Elektrik Sistemi',
+                          'frontPanel': 'Ön Panel',
+                          'rearPanel': 'Arka Panel',
+                          'exhaust': 'Egzoz'
+                        };
+                        
+                        return (
+                          <div key={key} className="grid grid-cols-2 gap-4 items-center">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {partNames[key] || key}
+                            </span>
+                            <select
+                              className="rounded-md border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              value={value.status}
+                              onChange={(e) => handleDamageStatusChange(key, e.target.value)}
+                            >
+                              <option value="Orijinal">Orijinal</option>
+                              <option value="Boyalı">Boyalı</option>
+                              <option value="Değişen">Değişen</option>
+                              <option value="Hasarlı">Hasarlı</option>
+                            </select>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </form>
+
+            {/* Fiyat Hesapla Butonu */}
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={handleCalculatePrice}
+                disabled={calculating || !mileage || !condition}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                {calculating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Hesaplanıyor...
+                  </>
+                ) : (
+                  <>
+                    <CalcIcon className="h-5 w-5" />
+                    Fiyat Hesapla
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Fiyat Hesaplama Sonucu */}
+        {priceResult && (
+          <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Hesaplama Sonucu</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Sahibinden Ortalaması */}
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
+                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Sahibinden Ortalaması</h3>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-500">
+                  {new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(priceResult.sahibindenAverage)}
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Piyasa verileri</p>
+              </div>
+
+              {/* Algoritma Sonucu */}
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
+                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Algoritma Sonucu</h3>
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-500">
+                  {new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(priceResult.algorithmResult)}
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Bizim hesaplama</p>
+              </div>
+
+              {/* Genel Sonuç */}
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 text-center border-2 border-green-500">
+                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Genel Sonuç</h3>
+                <div className="text-3xl font-bold text-green-600 dark:text-green-500">
+                  {new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(priceResult.finalResult)}
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Ortalama değer</p>
+              </div>
+            </div>
+
+            <div className="mt-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+              {selectedBrand} {selectedModel} {selectedSubModel} - {mileage} km - {condition}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
