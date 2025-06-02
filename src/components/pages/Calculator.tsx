@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, useReducer } from 'react';
 import { Calculator as CalcIcon, Search, ChevronDown, ChevronUp, ExternalLink, X, Home, ChevronRight } from 'lucide-react';
 import { useSahibindenData, SahibindenListing } from '../../hooks/useSahibindenData';
 import { supabase } from '../../lib/supabase';
@@ -22,50 +22,229 @@ interface PriceResult {
   finalResult: number;
 }
 
+// State Management için yeni tipler
+interface CalculatorState {
+  // Data states
+  brands: string[];
+  models: string[];
+  subModels: string[];
+  
+  // Selection states
+  selectedBrand: string;
+  selectedModel: string;
+  selectedSubModel: string;
+  
+  // Filter states
+  filters: SearchFilters;
+  condition: string;
+  damageStatus: DamageStatus;
+  
+  // UI states
+  loading: boolean;
+  showResults: boolean;
+  showSimpleList: boolean;
+  showDetailModal: boolean;
+  selectedListing: SahibindenListing | null;
+  
+  // Result state
+  priceResult: PriceResult | null;
+}
+
+// Action types
+type CalculatorAction =
+  | { type: 'SET_BRANDS'; payload: string[] }
+  | { type: 'SET_MODELS'; payload: string[] }
+  | { type: 'SET_SUBMODELS'; payload: string[] }
+  | { type: 'SELECT_BRAND'; payload: string }
+  | { type: 'SELECT_MODEL'; payload: string }
+  | { type: 'SELECT_SUBMODEL'; payload: string }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'UPDATE_FILTER'; payload: { key: keyof SearchFilters; value: string } }
+  | { type: 'SET_CONDITION'; payload: string }
+  | { type: 'UPDATE_DAMAGE_STATUS'; payload: { key: string; value: string } }
+  | { type: 'SET_SHOW_RESULTS'; payload: boolean }
+  | { type: 'SET_SHOW_SIMPLE_LIST'; payload: boolean }
+  | { type: 'SET_SHOW_DETAIL_MODAL'; payload: boolean }
+  | { type: 'SET_SELECTED_LISTING'; payload: SahibindenListing | null }
+  | { type: 'SET_PRICE_RESULT'; payload: PriceResult | null }
+  | { type: 'RESET_SELECTION' }
+  | { type: 'RESET_MODELS' };
+
+// Reducer function
+const calculatorReducer = (state: CalculatorState, action: CalculatorAction): CalculatorState => {
+  switch (action.type) {
+    case 'SET_BRANDS':
+      return { ...state, brands: action.payload };
+    
+    case 'SET_MODELS':
+      return { ...state, models: action.payload };
+    
+    case 'SET_SUBMODELS':
+      return { ...state, subModels: action.payload };
+    
+    case 'SELECT_BRAND':
+      return { 
+        ...state, 
+        selectedBrand: action.payload,
+        selectedModel: '',
+        selectedSubModel: '',
+        models: [],
+        subModels: []
+      };
+    
+    case 'SELECT_MODEL':
+      return { 
+        ...state, 
+        selectedModel: action.payload,
+        selectedSubModel: '',
+        subModels: []
+      };
+    
+    case 'SELECT_SUBMODEL':
+      return { ...state, selectedSubModel: action.payload };
+    
+    case 'SET_LOADING':
+      return { ...state, loading: action.payload };
+    
+    case 'UPDATE_FILTER':
+      return {
+        ...state,
+        filters: {
+          ...state.filters,
+          [action.payload.key]: action.payload.value
+        }
+      };
+    
+    case 'SET_CONDITION':
+      return { ...state, condition: action.payload };
+    
+    case 'UPDATE_DAMAGE_STATUS':
+      return {
+        ...state,
+        damageStatus: {
+          ...state.damageStatus,
+          [action.payload.key]: { status: action.payload.value }
+        }
+      };
+    
+    case 'SET_SHOW_RESULTS':
+      return { ...state, showResults: action.payload };
+    
+    case 'SET_SHOW_SIMPLE_LIST':
+      return { ...state, showSimpleList: action.payload };
+    
+    case 'SET_SHOW_DETAIL_MODAL':
+      return { ...state, showDetailModal: action.payload };
+    
+    case 'SET_SELECTED_LISTING':
+      return { ...state, selectedListing: action.payload };
+    
+    case 'SET_PRICE_RESULT':
+      return { ...state, priceResult: action.payload };
+    
+    case 'RESET_MODELS':
+      return { 
+        ...state, 
+        models: [], 
+        subModels: [],
+        selectedModel: '',
+        selectedSubModel: ''
+      };
+    
+    case 'RESET_SELECTION':
+      return {
+        ...state,
+        selectedBrand: '',
+        selectedModel: '',
+        selectedSubModel: '',
+        models: [],
+        subModels: [],
+        showResults: false,
+        showSimpleList: false,
+        priceResult: null,
+        filters: {
+          brand: '',
+          model: '',
+          yearRange: '',
+          mileageRange: '',
+          condition: ''
+        }
+      };
+    
+    default:
+      return state;
+  }
+};
+
 export function Calculator() {
   // Sahibinden hook
   const { listings, loading: sahibindenLoading, fetchSahibindenData } = useSahibindenData();
   
-  // Seçim state'leri (ESKİ SİSTEM)
-  const [brands, setBrands] = useState<string[]>([]);
-  const [models, setModels] = useState<string[]>([]);
-  const [subModels, setSubModels] = useState<string[]>([]);
-  const [selectedBrand, setSelectedBrand] = useState('');
-  const [selectedModel, setSelectedModel] = useState('');
-  const [selectedSubModel, setSelectedSubModel] = useState('');
-  const [loading, setLoading] = useState(false);
-  
-  // Arama filtreleri
-  const [filters, setFilters] = useState<SearchFilters>({
-    brand: '',
-    model: '',
-    yearRange: '',
-    mileageRange: '',
-    condition: ''
-  });
+  // Initial state for useReducer
+  const initialState: CalculatorState = {
+    // Data states
+    brands: [],
+    models: [],
+    subModels: [],
+    
+    // Selection states
+    selectedBrand: '',
+    selectedModel: '',
+    selectedSubModel: '',
+    
+    // Filter states
+    filters: {
+      brand: '',
+      model: '',
+      yearRange: '',
+      mileageRange: '',
+      condition: ''
+    },
+    condition: '',
+    damageStatus: {
+      chassis: { status: 'Orijinal' },
+      engine: { status: 'Orijinal' },
+      transmission: { status: 'Orijinal' },
+      frontFork: { status: 'Orijinal' },
+      fuelTank: { status: 'Orijinal' },
+      electrical: { status: 'Orijinal' },
+      frontPanel: { status: 'Orijinal' },
+      rearPanel: { status: 'Orijinal' },
+      exhaust: { status: 'Orijinal' },
+    },
+    
+    // UI states
+    loading: false,
+    showResults: false,
+    showSimpleList: false,
+    showDetailModal: false,
+    selectedListing: null,
+    
+    // Result state
+    priceResult: null,
+  };
 
-  // UI state'leri
-  const [showResults, setShowResults] = useState(false);
-  const [showSimpleList, setShowSimpleList] = useState(false);
-  const [selectedListing, setSelectedListing] = useState<SahibindenListing | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-
-  // Fiyat hesaplama
-  const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
-  const [condition, setCondition] = useState('');
+  // useReducer kullanımı - tek merkezi state yönetimi ✅
+  const [state, dispatch] = useReducer(calculatorReducer, initialState);
   
-  // Hasar durumu (algoritma için)
-  const [damageStatus, setDamageStatus] = useState<DamageStatus>({
-    chassis: { status: 'Orijinal' },
-    engine: { status: 'Orijinal' },
-    transmission: { status: 'Orijinal' },
-    frontFork: { status: 'Orijinal' },
-    fuelTank: { status: 'Orijinal' },
-    electrical: { status: 'Orijinal' },
-    frontPanel: { status: 'Orijinal' },
-    rearPanel: { status: 'Orijinal' },
-    exhaust: { status: 'Orijinal' },
-  });
+  // State destructuring for easier access
+  const {
+    brands,
+    models,
+    subModels,
+    selectedBrand,
+    selectedModel,
+    selectedSubModel,
+    loading,
+    filters,
+    condition,
+    damageStatus,
+    showResults,
+    showSimpleList,
+    showDetailModal,
+    selectedListing,
+    priceResult
+  } = state;
 
   // Dropdown seçenekleri - useMemo ile optimize edildi
   const mileageRanges = useMemo(() => [
@@ -130,7 +309,7 @@ export function Calculator() {
 
   const fetchBrands = async () => {
     try {
-      setLoading(true);
+      dispatch({ type: 'SET_LOADING', payload: true });
       const { data, error } = await supabase
         .from('motorcycles')
         .select('brand')
@@ -139,33 +318,29 @@ export function Calculator() {
       if (error) throw error;
 
       const uniqueBrands = Array.from(new Set(data.map(m => m.brand))).sort();
-      setBrands(uniqueBrands);
+      dispatch({ type: 'SET_BRANDS', payload: uniqueBrands });
     } catch (error) {
       console.error('Markalar yüklenirken hata:', error);
       toast.error('Markalar yüklenirken bir hata oluştu');
     } finally {
-      setLoading(false);
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
   const handleBrandSelect = useCallback(async (brand: string) => {
-    setSelectedBrand(brand);
-    setSelectedModel('');
-    setSelectedSubModel('');
-    setModels([]);
-    setSubModels([]);
-
+    dispatch({ type: 'SELECT_BRAND', payload: brand });
+    
     try {
       const { data, error } = await supabase
-        .from('motorcycles')
-        .select('model')
-        .eq('brand', brand)
-        .order('model', { ascending: true });
+      .from('motorcycles')
+      .select('model')
+      .eq('brand', brand)
+      .order('model', { ascending: true });
 
       if (error) throw error;
 
       const uniqueModels = Array.from(new Set(data.map(m => m.model))).sort();
-      setModels(uniqueModels);
+      dispatch({ type: 'SET_MODELS', payload: uniqueModels });
     } catch (error) {
       console.error('Modeller yüklenirken hata:', error);
       toast.error('Modeller yüklenirken bir hata oluştu');
@@ -173,9 +348,7 @@ export function Calculator() {
   }, []);
 
   const handleModelSelect = useCallback(async (model: string) => {
-    setSelectedModel(model);
-    setSelectedSubModel('');
-    setSubModels([]);
+    dispatch({ type: 'SELECT_MODEL', payload: model });
 
     try {
       const { data, error } = await supabase
@@ -184,7 +357,7 @@ export function Calculator() {
         .eq('brand', selectedBrand)
         .ilike('model', `%${model}%`)
         .order('model', { ascending: true });
-
+    
       if (error) throw error;
 
       const variants = data
@@ -193,7 +366,7 @@ export function Calculator() {
         .slice(0, 5);
 
       if (variants.length > 0) {
-        setSubModels(variants);
+        dispatch({ type: 'SET_SUBMODELS', payload: variants });
       }
     } catch (error) {
       console.error('Alt modeller yüklenirken hata:', error);
@@ -201,17 +374,14 @@ export function Calculator() {
   }, [selectedBrand]);
 
   const handleFilterChange = useCallback((key: keyof SearchFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    dispatch({ type: 'UPDATE_FILTER', payload: { key, value } });
   }, []);
 
   const handleSearch = async () => {
     if (!selectedBrand || !selectedModel) {
       toast.error('Lütfen marka ve model seçiniz');
-      return;
-    }
+        return;
+      }
 
     try {
       // Sahibinden araması için filtreleri hazırla
@@ -224,7 +394,7 @@ export function Calculator() {
       };
       
       await fetchSahibindenData(searchFilters);
-      setShowResults(true);
+      dispatch({ type: 'SET_SHOW_RESULTS', payload: true });
       toast.success(`${listings.length} ilan bulundu`);
     } catch (error) {
       console.error('Arama hatası:', error);
@@ -252,7 +422,7 @@ export function Calculator() {
         toast.error(`Motosiklet bilgisi bulunamadı: ${selectedBrand} ${selectedModel}`);
         return;
       }
-
+      
       // Kilometre aralığından ortalama değer çıkar
       const mileageValue = filters.mileageRange ? 
         parseInt(filters.mileageRange.split('-')[1]) || 50000 : 50000;
@@ -282,17 +452,17 @@ export function Calculator() {
       const algorithmResult = calculationData.calculated_price;
       const finalResult = Math.round((sahibindenAverage + algorithmResult) / 2);
 
-      setPriceResult({
+      dispatch({ type: 'SET_PRICE_RESULT', payload: {
         sahibindenAverage,
         algorithmResult,
         finalResult
-      });
+      } });
 
       toast.success('Fiyat hesaplama tamamlandı!');
     } catch (error: any) {
-      console.error('Hesaplama hatası:', error);
-      toast.error(error.message || 'Fiyat hesaplanırken bir hata oluştu');
-    }
+        console.error('Hesaplama hatası:', error);
+        toast.error(error.message || 'Fiyat hesaplanırken bir hata oluştu');
+      }
   };
 
   const calculatePrices = useCallback(() => {
@@ -312,18 +482,15 @@ export function Calculator() {
     // Genel ortalama
     const finalResult = (sahibindenAverage + mockAlgorithmPrice) / 2;
 
-    setPriceResult({
+    dispatch({ type: 'SET_PRICE_RESULT', payload: {
       sahibindenAverage,
       algorithmResult: mockAlgorithmPrice,
       finalResult
-    });
+    } });
   }, [listings]);
 
   const handleDamageStatusChange = useCallback((key: string, value: string) => {
-    setDamageStatus(prev => ({
-      ...prev,
-      [key]: { status: value }
-    }));
+    dispatch({ type: 'UPDATE_DAMAGE_STATUS', payload: { key, value } });
     
     // Tramer bilgisi değiştiğinde otomatik fiyat hesapla
     if (selectedBrand && selectedModel && filters.mileageRange && condition) {
@@ -344,21 +511,7 @@ export function Calculator() {
   }, [listings, calculatePrices]);
 
   const resetSelection = useCallback(() => {
-    setSelectedBrand('');
-    setSelectedModel('');
-    setSelectedSubModel('');
-    setModels([]);
-    setSubModels([]);
-    setShowResults(false);
-    setShowSimpleList(false);
-    setPriceResult(null);
-    setFilters({
-      brand: '',
-      model: '',
-      yearRange: '',
-      mileageRange: '',
-      condition: ''
-    });
+    dispatch({ type: 'RESET_SELECTION' });
   }, []);
 
   return (
@@ -420,7 +573,7 @@ export function Calculator() {
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Markalar */}
-            <div>
+              <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Markalar</h3>
               <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto border border-gray-200 dark:border-gray-600">
                 {loading ? (
@@ -439,14 +592,14 @@ export function Calculator() {
                       >
                         {brand}
                       </button>
-                    ))}
-                  </div>
+                  ))}
+              </div>
                 )}
               </div>
-            </div>
+              </div>
 
             {/* Modeller */}
-            <div>
+              <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Modeller</h3>
               <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto border border-gray-200 dark:border-gray-600">
                 {!selectedBrand ? (
@@ -467,14 +620,14 @@ export function Calculator() {
                       >
                         {model}
                       </button>
-                    ))}
+                  ))}
                   </div>
                 )}
               </div>
-            </div>
+              </div>
 
             {/* Alt Modeller */}
-            <div>
+              <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Varyantlar</h3>
               <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto border border-gray-200 dark:border-gray-600">
                 {!selectedModel ? (
@@ -486,7 +639,7 @@ export function Calculator() {
                     {subModels.map((subModel) => (
                       <button
                         key={subModel}
-                        onClick={() => setSelectedSubModel(subModel)}
+                        onClick={() => dispatch({ type: 'SELECT_SUBMODEL', payload: subModel })}
                         className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
                           selectedSubModel === subModel
                             ? 'bg-blue-600 text-white'
@@ -509,24 +662,24 @@ export function Calculator() {
               
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                  {/* Yıl */}
-                 <div>
+              <div>
                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Yıl</label>
-                   <select
+                <select
                      value={filters.yearRange}
                      onChange={(e) => handleFilterChange('yearRange', e.target.value)}
                      className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   >
+                >
                      <option value="">Seçiniz</option>
                      {years.map(year => (
                        <option key={year.value} value={year.value}>{year.label}</option>
                      ))}
-                   </select>
-                 </div>
+                </select>
+              </div>
 
                  {/* Kilometre Aralığı */}
-                 <div>
+              <div>
                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kilometre</label>
-                   <select
+                <select
                      value={filters.mileageRange}
                      onChange={(e) => handleFilterChange('mileageRange', e.target.value)}
                      className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -535,23 +688,23 @@ export function Calculator() {
                      {mileageRanges.map(range => (
                        <option key={range.value} value={range.value}>{range.label}</option>
                      ))}
-                   </select>
-                 </div>
+                </select>
+              </div>
 
                  {/* Araç Durumu */}
-                 <div>
+              <div>
                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Araç Durumu</label>
-                   <select
+                <select
                      value={condition}
-                     onChange={(e) => setCondition(e.target.value)}
+                     onChange={(e) => dispatch({ type: 'SET_CONDITION', payload: e.target.value })}
                      className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   >
+                >
                      <option value="">Seçiniz</option>
                      <option value="secondhand">İkinci El</option>
                      <option value="imported_new">Yurtdışından İthal Sıfır</option>
                      <option value="dealer_new">Yetkili Bayiden Sıfır</option>
-                   </select>
-                 </div>
+                </select>
+              </div>
               </div>
             </div>
           )}
@@ -599,7 +752,7 @@ export function Calculator() {
         {showResults && listings.length > 0 && (
           <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <button
-              onClick={() => setShowSimpleList(!showSimpleList)}
+              onClick={() => dispatch({ type: 'SET_SHOW_SIMPLE_LIST', payload: !showSimpleList })}
               className="w-full h-5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               <span>Sahibinden Sonuçlar ({listings.length} ilan)</span>
@@ -628,8 +781,8 @@ export function Calculator() {
                         </div>
                         <button
                           onClick={() => {
-                            setSelectedListing(listing);
-                            setShowDetailModal(true);
+                            dispatch({ type: 'SET_SELECTED_LISTING', payload: listing });
+                            dispatch({ type: 'SET_SHOW_DETAIL_MODAL', payload: true });
                           }}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
                         >
@@ -691,11 +844,11 @@ export function Calculator() {
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center border-2 border-green-500">
                 <h3 className="text-lg font-medium text-green-700 dark:text-green-300 mb-2">Genel Ortalama</h3>
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {new Intl.NumberFormat('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
+                {new Intl.NumberFormat('tr-TR', {
+                  style: 'currency',
+                  currency: 'TRY',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0
                   }).format(priceResult.finalResult)}
                 </div>
                 <p className="text-sm text-green-600 dark:text-green-400 mt-1">Önerilen fiyat</p>
@@ -747,11 +900,8 @@ export function Calculator() {
               })}
             </div>
 
-
           </div>
         )}
-
-
 
         {/* Sonuç Yoksa */}
         {showResults && listings.length === 0 && (
@@ -771,7 +921,7 @@ export function Calculator() {
               <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">İlan Detayı</h2>
                 <button
-                  onClick={() => setShowDetailModal(false)}
+                  onClick={() => dispatch({ type: 'SET_SHOW_DETAIL_MODAL', payload: false })}
                   className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
                 >
                   <X className="h-6 w-6" />
@@ -854,8 +1004,8 @@ export function Calculator() {
                 </a>
               </div>
             </div>
-          </div>
-        )}
+            </div>
+          )}
       </div>
     </div>
   );
