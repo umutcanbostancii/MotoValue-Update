@@ -1,5 +1,5 @@
 # MotoValue Projesi - Kapsamlı Durum Raporu
-Tarih: 07 Nisan 2025
+Tarih: 28 Mayıs 2025
 
 ## 1. Proje Özeti
 
@@ -22,6 +22,11 @@ MotoValue, motosiklet değerleme ve fiyatlandırma hizmeti sunan bir web uygulam
 - ✅ Detaylı hesaplama formu
 - ✅ Hasar/tramer bilgisi giriş paneli
 - ✅ Detaylı sonuç sayfası ve PDF raporu
+- ✅ Yeniden tasarlanmış Calculator sayfası
+- ✅ 3 kolonlu motosiklet seçim sistemi
+- ✅ İki ayrı sonuç alanı (Bizim Aramamız + Sahibinden Sonuçlar)
+- ✅ Büyük kartlar ve motor görseli entegrasyonu
+- ✅ Açık/koyu tema uyumluluğu
 
 ### C. İş Mantığı:
 - ✅ Çoklu faktörlü değerlendirme algoritması
@@ -45,6 +50,18 @@ MotoValue, motosiklet değerleme ve fiyatlandırma hizmeti sunan bir web uygulam
 - ✅ Hasar durumu özet tablosu
 - ✅ İndirgenmiş ve tam görünüm seçenekleri
 - ✅ Paylaşılabilir PDF raporu
+
+### C. Calculator Sayfası Yeniden Tasarımı (Mayıs 2025):
+- ✅ Modal kaldırılması ve ana sayfada 3 kolonlu seçim sistemi
+- ✅ Kategori ağacı benzeri marka/model/varyant seçimi
+- ✅ İki ayrı sonuç alanı: "Bizim Aramamız" ve "Sahibinden Sonuçlar"
+- ✅ Büyük, görsel açıdan çekici kart tasarımı
+- ✅ Motor görseli entegrasyonu ve fallback sistemi
+- ✅ Seçilebilir kartlar ve detay modal'ı
+- ✅ Dropdown'lar: Teknik özellikler, güvenlik/aksesuar, hasar/tramer
+- ✅ 3 ayrı fiyat hesaplama sonucu (Sahibinden ortalaması, algoritma sonucu, genel sonuç)
+- ✅ Tam tema uyumluluğu (açık/koyu tema desteği)
+- ✅ Gelişmiş kullanıcı deneyimi ve görsel tasarım
 
 ## 4. Teknik Altyapı
 
@@ -71,18 +88,20 @@ MotoValue, motosiklet değerleme ve fiyatlandırma hizmeti sunan bir web uygulam
 ## 6. İyileştirme Gerektiren Alanlar
 
 1. **Karşılaştırma Özellikleri**: Farklı modellerin karşılaştırılma imkanı yok
-2. **İleri Filtreleme**: Detaylı filtre ve arama özellikleri yetersiz
+2. ✅ **ÇÖZÜLDÜ**: Calculator sayfasında gelişmiş filtreleme sistemi eklendi
 3. **Kullanıcı Geri Bildirimi**: Kullanıcıların yorum ve derecelendirme yapma imkanı yok
 4. **Admin Paneli**: Yönetici arayüzü için ek geliştirmeler gerekli
 5. **Performans Optimizasyonu**: Büyük veri setleri için performans iyileştirmeleri yapılmalı
+6. **Sahibinden.com API Entegrasyonu**: Gerçek ilan verilerinin çekilmesi
 
 ## 7. Önerilen İyileştirmeler
 
 ### A. Kısa Vadeli (1-2 Ay):
 1. **Benzer Modeller Önerisi**: Hesaplama sonucunda benzer özellikteki alternatif modellerin gösterilmesi
-2. **Detaylı Filtreleme**: İleri arama ve filtreleme özelliklerinin eklenmesi
+2. ✅ **TAMAMLANDI**: Detaylı Filtreleme
 3. **Karşılaştırma Sayfası**: 2-3 modelin yan yana karşılaştırılabilmesi
 4. **Favori Listesi**: Kullanıcılara favori motosiklet listesi oluşturma imkanı
+5. **Sahibinden.com API Entegrasyonu**: Gerçek ilan verilerinin çekilmesi ve gösterilmesi
 
 ### B. Orta Vadeli (3-6 Ay):
 1. **Kullanıcı Geri Bildirim Sistemi**: Değerleme sonuçları için geri bildirim mekanizması
@@ -106,8 +125,10 @@ MotoValue, motosiklet değerleme ve fiyatlandırma hizmeti sunan bir web uygulam
 
 ## 9. Sonuç ve Değerlendirme
 
-MotoValue projesi, motosiklet değerleme alanında kapsamlı bir çözüm sunmaktadır. Son geliştirmelerle birlikte, özellikle hasar/tramer detayları ve hesaplama algoritmasındaki iyileştirmeler, uygulamanın doğruluğunu ve güvenilirliğini artırmıştır. Bugüne kadar geliştirilen özellikler temel ihtiyaçları karşılamakla birlikte, kullanıcı deneyimini zenginleştirmek için önerilen iyileştirmelerin hayata geçirilmesi önemlidir.
+MotoValue projesi, motosiklet değerleme alanında kapsamlı bir çözüm sunmaktadır. Son geliştirmelerle birlikte, özellikle hasar/tramer detayları ve hesaplama algoritmasındaki iyileştirmeler, uygulamanın doğruluğunu ve güvenilirliğini artırmıştır. 
 
-Özellikle karşılaştırma, filtreleme ve benzer model önerisi gibi özelliklerin eklenmesi, uygulamanın değerini kullanıcılar için önemli ölçüde artıracaktır. Ayrıca, makine öğrenmesi ve ileri analitik yeteneklerin entegrasyonu uzun vadede rekabet avantajı sağlayacaktır.
+**Mayıs 2025 Calculator Yeniden Tasarımı** ile kullanıcı deneyimi önemli ölçüde geliştirilmiştir. Yeni 3 kolonlu seçim sistemi, büyük kartlar, motor görselleri ve tema uyumluluğu ile modern bir arayüz oluşturulmuştur. İki ayrı sonuç alanı ve gelişmiş dropdown sistemi, kullanıcıların daha detaylı ve kolay bir şekilde değerleme yapabilmesini sağlamaktadır.
 
-Proje başarılı bir şekilde ilerlemekte olup, teknik altyapı ve hesaplama algoritması sağlam bir temel üzerine kurulmuştur. Bu temeli koruyarak, kullanıcı deneyimine odaklanan yeni özelliklerle projenin geliştirilmesi önerilmektedir. 
+Bugüne kadar geliştirilen özellikler temel ihtiyaçları karşılamakla birlikte, kullanıcı deneyimini zenginleştirmek için önerilen iyileştirmelerin hayata geçirilmesi önemlidir. Özellikle Sahibinden.com API entegrasyonu, gerçek ilan verilerinin çekilmesi ve karşılaştırma özellikleri bir sonraki aşamada öncelikli olarak ele alınmalıdır.
+
+Proje başarılı bir şekilde ilerlemekte olup, teknik altyapı ve hesaplama algoritması sağlam bir temel üzerine kurulmuştur. Calculator sayfasının yeniden tasarımı ile kullanıcı deneyimi önemli ölçüde geliştirilmiş ve modern bir arayüz oluşturulmuştur. Bu temeli koruyarak, API entegrasyonları ve karşılaştırma özelliklerine odaklanan yeni geliştirmelerle projenin ilerletilmesi önerilmektedir. 

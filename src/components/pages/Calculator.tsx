@@ -1,57 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Calculator as CalcIcon, Search, ChevronDown, ChevronUp, ExternalLink, MapPin, Calendar, Gauge, Eye, X } from 'lucide-react';
+import { Calculator as CalcIcon, Search, ChevronDown, ChevronUp, ExternalLink, MapPin, Calendar, Gauge, Eye, X, Home, ChevronRight, Star, Shield, Settings } from 'lucide-react';
+import { useSahibindenData, SahibindenListing } from '../../hooks/useSahibindenData';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
 
-interface Motorcycle {
-  id: string;
+interface SearchFilters {
   brand: string;
   model: string;
-  year: number;
-  category: string;
-  price: string;
-  color_options?: string[];
-}
-
-interface SearchResult {
-  id: string;
-  brand: string;
-  model: string;
-  year: number;
-  price: string;
-  mileage: number;
-  location: string;
-  date: string;
-  image: string;
-  title: string;
-  link: string;
-}
-
-interface TechnicalFeatures {
-  abs: boolean;
-  airbag: boolean;
-  alarm: boolean;
-  immobilizer: boolean;
-  traction_control: boolean;
-  cbs: boolean;
-  quick_shifter: boolean;
-  side_protection: boolean;
-  front_protection: boolean;
-}
-
-interface Accessories {
-  heated_grips: boolean;
-  rear_carrier: boolean;
-  luggage_system: boolean;
-  carbon: boolean;
-  nos: boolean;
-  led_stop: boolean;
-  xenon: boolean;
-  gps: boolean;
-  led_signals: boolean;
-  sound_system: boolean;
-  front_camera: boolean;
-  double_stand: boolean;
+  yearRange: string;
+  mileageRange: string;
+  condition: string;
 }
 
 interface DamageStatus {
@@ -65,56 +23,40 @@ interface PriceResult {
 }
 
 export function Calculator() {
-  // Seçim state'leri
+  // Sahibinden hook
+  const { listings, loading: sahibindenLoading, fetchSahibindenData } = useSahibindenData();
+  
+  // Seçim state'leri (ESKİ SİSTEM)
   const [brands, setBrands] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [subModels, setSubModels] = useState<string[]>([]);
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedSubModel, setSelectedSubModel] = useState('');
-  
-  // Arama sonuçları
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [selectedCard, setSelectedCard] = useState<SearchResult | null>(null);
-  const [showCardDetail, setShowCardDetail] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [searching, setSearching] = useState(false);
+  
+  // Arama filtreleri
+  const [filters, setFilters] = useState<SearchFilters>({
+    brand: '',
+    model: '',
+    yearRange: '',
+    mileageRange: '',
+    condition: ''
+  });
 
-  // Dropdown state'leri
-  const [showTechnical, setShowTechnical] = useState(false);
-  const [showFeatures, setShowFeatures] = useState(false);
-  const [showDamage, setShowDamage] = useState(false);
+  // UI state'leri
+  const [showResults, setShowResults] = useState(false);
+  const [showSimpleList, setShowSimpleList] = useState(false);
+  const [calculating, setCalculating] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<SahibindenListing | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // Form state'leri
+  // Fiyat hesaplama
+  const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
   const [mileage, setMileage] = useState('');
   const [condition, setCondition] = useState('');
-  const [technicalFeatures, setTechnicalFeatures] = useState<TechnicalFeatures>({
-    abs: false,
-    airbag: false,
-    alarm: false,
-    immobilizer: false,
-    traction_control: false,
-    cbs: false,
-    quick_shifter: false,
-    side_protection: false,
-    front_protection: false,
-  });
-
-  const [accessories, setAccessories] = useState<Accessories>({
-    heated_grips: false,
-    rear_carrier: false,
-    luggage_system: false,
-    carbon: false,
-    nos: false,
-    led_stop: false,
-    xenon: false,
-    gps: false,
-    led_signals: false,
-    sound_system: false,
-    front_camera: false,
-    double_stand: false,
-  });
-
+  
+  // Hasar durumu (algoritma için)
   const [damageStatus, setDamageStatus] = useState<DamageStatus>({
     chassis: { status: 'Orijinal' },
     engine: { status: 'Orijinal' },
@@ -127,10 +69,55 @@ export function Calculator() {
     exhaust: { status: 'Orijinal' },
   });
 
-  // Fiyat hesaplama
-  const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
-  const [calculating, setCalculating] = useState(false);
+  // Dropdown seçenekleri
+  const mileageRanges = [
+    // İlk 50k'da 5'er bin aralıklar
+    { value: '0-5000', label: '0 - 5.000 km' },
+    { value: '5001-10000', label: '5.001 - 10.000 km' },
+    { value: '10001-15000', label: '10.001 - 15.000 km' },
+    { value: '15001-20000', label: '15.001 - 20.000 km' },
+    { value: '20001-25000', label: '20.001 - 25.000 km' },
+    { value: '25001-30000', label: '25.001 - 30.000 km' },
+    { value: '30001-35000', label: '30.001 - 35.000 km' },
+    { value: '35001-40000', label: '35.001 - 40.000 km' },
+    { value: '40001-45000', label: '40.001 - 45.000 km' },
+    { value: '45001-50000', label: '45.001 - 50.000 km' },
+    // 50k sonrası 10'ar bin aralıklar
+    { value: '50001-60000', label: '50.001 - 60.000 km' },
+    { value: '60001-70000', label: '60.001 - 70.000 km' },
+    { value: '70001-80000', label: '70.001 - 80.000 km' },
+    { value: '80001-90000', label: '80.001 - 90.000 km' },
+    { value: '90001-100000', label: '90.001 - 100.000 km' },
+    { value: '100001-110000', label: '100.001 - 110.000 km' },
+    { value: '110001-120000', label: '110.001 - 120.000 km' },
+    { value: '120001-130000', label: '120.001 - 130.000 km' },
+    { value: '130001-140000', label: '130.001 - 140.000 km' },
+    { value: '140001-150000', label: '140.001 - 150.000 km' },
+    { value: '150001-160000', label: '150.001 - 160.000 km' },
+    { value: '160001-170000', label: '160.001 - 170.000 km' },
+    { value: '170001-180000', label: '170.001 - 180.000 km' },
+    { value: '180001-190000', label: '180.001 - 190.000 km' },
+    { value: '190001-200000', label: '190.001 - 200.000 km' },
+    { value: '200001-210000', label: '200.001 - 210.000 km' },
+    { value: '210001-220000', label: '210.001 - 220.000 km' },
+    { value: '220001-230000', label: '220.001 - 230.000 km' },
+    { value: '230001-240000', label: '230.001 - 240.000 km' },
+    { value: '240001-250000', label: '240.001 - 250.000 km' },
+    { value: '250001-260000', label: '250.001 - 260.000 km' },
+    { value: '260001-270000', label: '260.001 - 270.000 km' },
+    { value: '270001-280000', label: '270.001 - 280.000 km' },
+    { value: '280001-290000', label: '280.001 - 290.000 km' },
+    { value: '290001-300000', label: '290.001 - 300.000 km' }
+  ];
 
+  // 1980'den bugüne kadar tüm yıllar
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let year = currentYear; year >= 1980; year--) {
+    years.push({ value: year.toString(), label: year.toString() });
+  }
+
+  // ESKİ SİSTEM FONKSİYONLARI
   useEffect(() => {
     fetchBrands();
   }, []);
@@ -207,77 +194,40 @@ export function Calculator() {
     }
   };
 
+  const handleFilterChange = (key: keyof SearchFilters, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
   const handleSearch = async () => {
     if (!selectedBrand || !selectedModel) {
       toast.error('Lütfen marka ve model seçiniz');
       return;
     }
 
-    setSearching(true);
     try {
-      const mockResults: SearchResult[] = [
-        {
-          id: '1',
-          brand: selectedBrand,
-          model: selectedModel,
-          year: 2023,
-          price: '450.000 ₺',
-          mileage: 5000,
-          location: 'İstanbul, Kadıköy',
-          date: '2 gün önce',
-          image: '/api/placeholder/300/200',
-          title: `${selectedBrand} ${selectedModel} - Temiz Araç`,
-          link: 'https://sahibinden.com/ilan/vasita-motosiklet-honda-cbr-650r-1234567'
-        },
-        {
-          id: '2',
-          brand: selectedBrand,
-          model: selectedModel,
-          year: 2022,
-          price: '420.000 ₺',
-          mileage: 12000,
-          location: 'Ankara, Çankaya',
-          date: '1 hafta önce',
-          image: '/api/placeholder/300/200',
-          title: `${selectedBrand} ${selectedModel} - Az Kullanılmış`,
-          link: 'https://sahibinden.com/ilan/vasita-motosiklet-honda-cbr-650r-1234568'
-        },
-        {
-          id: '3',
-          brand: selectedBrand,
-          model: selectedModel,
-          year: 2021,
-          price: '380.000 ₺',
-          mileage: 25000,
-          location: 'İzmir, Bornova',
-          date: '3 gün önce',
-          image: '/api/placeholder/300/200',
-          title: `${selectedBrand} ${selectedModel} - Bakımlı`,
-          link: 'https://sahibinden.com/ilan/vasita-motosiklet-honda-cbr-650r-1234569'
-        }
-      ];
-
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Sahibinden araması için filtreleri hazırla
+      const searchFilters = {
+        brand: selectedBrand,
+        model: selectedModel,
+        yearRange: filters.yearRange,
+        mileageRange: filters.mileageRange,
+        condition: filters.condition
+      };
       
-      setSearchResults(mockResults);
-      toast.success(`${mockResults.length} ilan bulundu`);
+      await fetchSahibindenData(searchFilters);
+      setShowResults(true);
+      toast.success(`${listings.length} ilan bulundu`);
     } catch (error) {
       console.error('Arama hatası:', error);
       toast.error('Arama sırasında bir hata oluştu');
-    } finally {
-      setSearching(false);
     }
   };
 
-  const handleDamageStatusChange = (key: string, value: string) => {
-    setDamageStatus(prev => ({
-      ...prev,
-      [key]: { status: value }
-    }));
-  };
-
   const handleCalculatePrice = async () => {
-    if (!selectedBrand || !selectedModel || !mileage || !condition) {
+    if (!selectedBrand || !selectedModel || !filters.mileageRange || !condition) {
       toast.error('Lütfen gerekli alanları doldurunuz');
       return;
     }
@@ -298,11 +248,15 @@ export function Calculator() {
         return;
       }
 
+      // Kilometre aralığından ortalama değer çıkar
+      const mileageValue = filters.mileageRange ? 
+        parseInt(filters.mileageRange.split('-')[1]) || 50000 : 50000;
+
       // RPC fonksiyonunu çağır
       const { data: calculationData, error: calculationError } = await supabase
         .rpc('calculate_motorcycle_price', {
           input_motorcycle_id: motorcycleData.id,
-          input_mileage: parseInt(mileage, 10),
+          input_mileage: mileageValue,
           input_condition: condition,
           input_damage_status: damageStatus
         });
@@ -315,8 +269,11 @@ export function Calculator() {
         throw new Error('Hesaplama yapılamadı');
       }
 
-      // Sahibinden ortalaması (statik)
-      const sahibindenAverage = 425000;
+      // Sahibinden ortalaması hesapla
+      const sahibindenAverage = listings.length > 0 ? 
+        listings.map(listing => parseInt(listing.price.replace(/[^\d]/g, ''))).reduce((a, b) => a + b, 0) / listings.length :
+        425000; // Varsayılan değer
+
       const algorithmResult = calculationData.calculated_price;
       const finalResult = Math.round((sahibindenAverage + algorithmResult) / 2);
 
@@ -335,19 +292,117 @@ export function Calculator() {
     }
   };
 
+  const calculatePrices = () => {
+    if (listings.length === 0) return;
+
+    // Sahibinden ortalama fiyat hesaplama
+    const prices = listings.map(listing => {
+      const priceStr = listing.price.replace(/[^\d]/g, '');
+      return parseInt(priceStr);
+    });
+
+    const sahibindenAverage = prices.reduce((a, b) => a + b, 0) / prices.length;
+
+    // Mock algoritma fiyatı (gerçek sistemde RPC çağrısı yapılacak)
+    const mockAlgorithmPrice = sahibindenAverage * 0.95; // %5 daha düşük
+
+    // Genel ortalama
+    const finalResult = (sahibindenAverage + mockAlgorithmPrice) / 2;
+
+    setPriceResult({
+      sahibindenAverage,
+      algorithmResult: mockAlgorithmPrice,
+      finalResult
+    });
+  };
+
+  const handleDamageStatusChange = (key: string, value: string) => {
+    setDamageStatus(prev => ({
+      ...prev,
+      [key]: { status: value }
+    }));
+    
+    // Tramer bilgisi değiştiğinde otomatik fiyat hesapla
+    if (selectedBrand && selectedModel && filters.mileageRange && condition) {
+      setTimeout(() => {
+        handleCalculatePrice();
+      }, 100);
+    }
+  };
+
+  // Fiyat hesaplama otomatik olarak yapılsın
+  useEffect(() => {
+    if (listings.length > 0) {
+      calculatePrices();
+    }
+  }, [listings]);
+
   const resetSelection = () => {
     setSelectedBrand('');
     setSelectedModel('');
     setSelectedSubModel('');
     setModels([]);
     setSubModels([]);
-    setSearchResults([]);
+    setShowResults(false);
+    setShowSimpleList(false);
     setPriceResult(null);
+    setFilters({
+      brand: '',
+      model: '',
+      yearRange: '',
+      mileageRange: '',
+      condition: ''
+    });
   };
 
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Breadcrumb Navigation */}
+        {(selectedBrand || selectedModel || filters.condition || filters.mileageRange || filters.yearRange) && (
+          <div className="bg-gray-50 dark:bg-gray-800/30 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+              <Home className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" />
+              <span>Fiyat Hesapla</span>
+              {selectedBrand && (
+                <>
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="text-gray-900 dark:text-white font-medium">{selectedBrand}</span>
+                </>
+              )}
+              {selectedModel && (
+                <>
+                  <ChevronRight className="h-4 w-4" />
+                  <span className="text-gray-900 dark:text-white font-medium">{selectedModel}</span>
+                </>
+              )}
+              {(filters.condition || filters.mileageRange || filters.yearRange) && (
+                <>
+                  <ChevronRight className="h-4 w-4" />
+                  <div className="flex items-center space-x-2">
+                    {filters.condition && (
+                      <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 px-2 py-1 rounded text-xs">
+                        {filters.condition}
+                      </span>
+                    )}
+                    {filters.mileageRange && (
+                      <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 px-2 py-1 rounded text-xs">
+                        {mileageRanges.find(r => r.value === filters.mileageRange)?.label}
+                      </span>
+                    )}
+                    {filters.yearRange && (
+                      <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300 px-2 py-1 rounded text-xs">
+                        {filters.yearRange}
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
           <CalcIcon className="h-6 w-6 inline-block mr-2" />
           Fiyat Hesapla
@@ -441,22 +496,76 @@ export function Calculator() {
             </div>
           </div>
 
+          {/* Arama Filtreleri */}
+          {(selectedBrand && selectedModel) && (
+            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Sahibinden Arama Filtreleri</h3>
+              
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 {/* Yıl */}
+                 <div>
+                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Yıl</label>
+                   <select
+                     value={filters.yearRange}
+                     onChange={(e) => handleFilterChange('yearRange', e.target.value)}
+                     className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   >
+                     <option value="">Seçiniz</option>
+                     {years.map(year => (
+                       <option key={year.value} value={year.value}>{year.label}</option>
+                     ))}
+                   </select>
+                 </div>
+
+                 {/* Kilometre Aralığı */}
+                 <div>
+                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kilometre</label>
+                   <select
+                     value={filters.mileageRange}
+                     onChange={(e) => handleFilterChange('mileageRange', e.target.value)}
+                     className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   >
+                     <option value="">Seçiniz</option>
+                     {mileageRanges.map(range => (
+                       <option key={range.value} value={range.value}>{range.label}</option>
+                     ))}
+                   </select>
+                 </div>
+
+                 {/* Araç Durumu */}
+                 <div>
+                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Araç Durumu</label>
+                   <select
+                     value={condition}
+                     onChange={(e) => setCondition(e.target.value)}
+                     className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   >
+                     <option value="">Seçiniz</option>
+                     <option value="secondhand">İkinci El</option>
+                     <option value="imported_new">Yurtdışından İthal Sıfır</option>
+                     <option value="dealer_new">Yetkili Bayiden Sıfır</option>
+                   </select>
+                 </div>
+              </div>
+            </div>
+          )}
+
           {/* Ara Butonu */}
           <div className="mt-6 flex justify-center">
             <button
               onClick={handleSearch}
-              disabled={!selectedBrand || !selectedModel || searching}
+              disabled={!selectedBrand || !selectedModel || !filters.yearRange || !filters.mileageRange || !condition || sahibindenLoading}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
             >
-              {searching ? (
+              {sahibindenLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Aranıyor...
+                  Sahibinden'den Çekiliyor...
                 </>
               ) : (
                 <>
                   <Search className="h-5 w-5" />
-                  Ara
+                  Sahibinden'de Ara
                 </>
               )}
             </button>
@@ -480,362 +589,163 @@ export function Calculator() {
           )}
         </div>
 
-        {/* İki Ayrı Sonuç Alanı */}
-        {searchResults.length > 0 && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            {/* Bizim Aramamız */}
-            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Bizim Aramamız</h2>
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  {selectedBrand} {selectedModel} {selectedSubModel}
-                </h3>
-                <div className="text-gray-700 dark:text-gray-300 space-y-1">
-                  <p><strong>Marka:</strong> {selectedBrand}</p>
-                  <p><strong>Model:</strong> {selectedModel}</p>
-                  {selectedSubModel && <p><strong>Varyant:</strong> {selectedSubModel}</p>}
-                  <p><strong>Durum:</strong> Arama yapıldı</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Sahibinden Sonuçlar */}
-            <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Sahibinden Sonuçlar ({searchResults.length} ilan)
-              </h2>
-              
-              <div className="space-y-6 max-h-[500px] overflow-y-auto">
-                {searchResults.map((result) => (
-                  <div
-                    key={result.id}
-                    className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
-                  >
-                    <div className="flex gap-6">
-                      {/* Sol taraf - Bilgiler */}
+        {/* Sahibinden Sonuçlar - Kollaps Buton */}
+        {showResults && listings.length > 0 && (
+          <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <button
+              onClick={() => setShowSimpleList(!showSimpleList)}
+              className="w-full h-5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              <span>Sahibinden Sonuçlar ({listings.length} ilan)</span>
+              {showSimpleList ? <ChevronUp className="h-3 w-3 ml-2" /> : <ChevronDown className="h-3 w-3 ml-2" />}
+            </button>
+            
+            {showSimpleList && (
+              <div className="p-4">
+                <div className="space-y-3">
+                  {listings.map((listing) => (
+                    <div
+                      key={listing.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    >
                       <div className="flex-1">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-semibold text-gray-900 dark:text-white text-lg leading-tight">
-                            {result.title}
-                          </h3>
-                          <span className="text-sm text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full">
-                            {result.year}
-                          </span>
+                        <div className="font-medium text-gray-900 dark:text-white text-sm">
+                          {listing.title}
                         </div>
-                        
-                        <div className="text-2xl font-bold text-green-600 dark:text-green-500 mb-4">
-                          {result.price}
-                        </div>
-
-                        <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300 mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full">
-                              <Gauge className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                              <span>{result.mileage.toLocaleString()} km</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full">
-                              <MapPin className="h-4 w-4 text-red-500 dark:text-red-400" />
-                              <span>{result.location}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 bg-gray-200 dark:bg-gray-600 px-3 py-1 rounded-full">
-                              <Calendar className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
-                              <span>{result.date}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => {
-                              setSelectedCard(result);
-                              setShowCardDetail(true);
-                            }}
-                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                          >
-                            <Eye className="h-4 w-4" />
-                            Detayları Gör
-                          </button>
-                          
-                          <a
-                            href={result.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 bg-gray-500 dark:bg-gray-600 hover:bg-gray-600 dark:hover:bg-gray-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            Sahibinden'de Gör
-                          </a>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          {listing.classifiedDetails.brand} {listing.classifiedDetails.model} • {listing.classifiedDetails.year} • {listing.classifiedDetails.mileage} km • {listing.location}
                         </div>
                       </div>
-
-                      {/* Sağ taraf - Motor Görseli */}
-                      <div className="w-48 h-36 flex-shrink-0">
-                        <img
-                          src="/src/moto-image.jpg"
-                          alt={result.title}
-                          className="w-full h-full object-cover rounded-lg border-2 border-gray-300 dark:border-gray-500 shadow-lg"
-                          onError={(e) => {
-                            e.currentTarget.src = "/src/moto-image.jpg";
+                      <div className="flex items-center gap-3">
+                        <div className="text-green-600 dark:text-green-500 font-semibold text-sm">
+                          {listing.price}
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedListing(listing);
+                            setShowDetailModal(true);
                           }}
-                        />
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                        >
+                          Kartı Aç
+                        </button>
+                        <a
+                          href={`https://sahibinden.com${listing.link}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Git
+                        </a>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* Kart Detay Modal */}
-        {showCardDetail && selectedCard && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">İlan Detayı</h2>
-                <button
-                  onClick={() => setShowCardDetail(false)}
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-
-              <div className="p-6">
-                <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 relative border border-gray-200 dark:border-gray-600">
-                  <img
-                    src="/src/moto-image.jpg"
-                    alt={selectedCard.title}
-                    className="w-full h-full object-cover rounded-lg"
-                    onError={(e) => {
-                      e.currentTarget.src = "/src/moto-image.jpg";
-                    }}
-                  />
-                  <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm">
-                    {selectedCard.year}
-                  </div>
-                </div>
-
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  {selectedCard.title}
-                </h3>
-                
-                <div className="text-3xl font-bold text-green-600 dark:text-green-500 mb-6">
-                  {selectedCard.price}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300 mb-6">
-                  <div className="flex items-center gap-2">
-                    <Gauge className="h-5 w-5" />
-                    <span>{selectedCard.mileage.toLocaleString()} km</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    <span>{selectedCard.location}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    <span>{selectedCard.date}</span>
-                  </div>
-
-                  <div className="text-gray-700 dark:text-gray-300">
-                    <strong>Marka:</strong> {selectedCard.brand}
-                  </div>
-                </div>
-
-                <a
-                  href={selectedCard.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                >
-                  <ExternalLink className="h-5 w-5" />
-                  Sahibinden'de Gör
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Teknik Özellikler ve Fiyat Hesaplama */}
-        {searchResults.length > 0 && (
+        {/* Fiyat Sonuç Alanı */}
+        {priceResult && showResults && (
           <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Fiyat Hesaplama</h2>
-
-            {/* Temel Bilgiler */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kilometre</label>
-                <input
-                  type="number"
-                  className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={mileage}
-                  onChange={(e) => setMileage(e.target.value)}
-                  placeholder="Kilometre giriniz"
-                />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Fiyat Karşılaştırması</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Sahibinden Ortalaması */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700">
+                <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">Sahibinden Ortalama</h3>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(priceResult.sahibindenAverage)}
+                </div>
+                <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">{listings.length} ilan ortalaması</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Durum</label>
-                <select 
-                  className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={condition}
-                  onChange={(e) => setCondition(e.target.value)}
-                >
-                  <option value="">Seçiniz</option>
-                  <option value="new">Sıfır</option>
-                  <option value="excellent">Mükemmel</option>
-                  <option value="good">İyi</option>
-                  <option value="fair">Orta</option>
-                  <option value="poor">Kötü</option>
-                </select>
+              {/* Algoritma Sonucu */}
+              <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 text-center border border-orange-200 dark:border-orange-700">
+                <h3 className="text-lg font-medium text-orange-700 dark:text-orange-300 mb-2">Algoritma Fiyatı</h3>
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  {new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(priceResult.algorithmResult)}
+                </div>
+                <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">Sistem hesaplaması</p>
+              </div>
+
+              {/* Genel Ortalama */}
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center border-2 border-green-500">
+                <h3 className="text-lg font-medium text-green-700 dark:text-green-300 mb-2">Genel Ortalama</h3>
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                  {new Intl.NumberFormat('tr-TR', {
+                    style: 'currency',
+                    currency: 'TRY',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(priceResult.finalResult)}
+                </div>
+                <p className="text-sm text-green-600 dark:text-green-400 mt-1">Önerilen fiyat</p>
               </div>
             </div>
 
-            {/* Teknik Özellikler Dropdown */}
-            <div className="space-y-4">
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg">
-                <button
-                  onClick={() => setShowTechnical(!showTechnical)}
-                  className="w-full flex items-center justify-between p-4 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <span className="font-medium">Teknik Özellikler</span>
-                  {showTechnical ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                </button>
-                
-                {showTechnical && (
-                  <div className="p-4 border-t border-gray-300 dark:border-gray-600">
-                    <div className="text-gray-700 dark:text-gray-300 text-sm">
-                      Teknik özellikler buraya eklenecek (Motor gücü, hacmi, vites tipi vb.)
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="mt-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+              Fiyatlar {selectedBrand} {selectedModel} {selectedSubModel} modeli için hesaplanmıştır
+            </div>
+          </div>
+        )}
 
-              {/* Özellikler Dropdown */}
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg">
-                <button
-                  onClick={() => setShowFeatures(!showFeatures)}
-                  className="w-full flex items-center justify-between p-4 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <span className="font-medium">Güvenlik ve Aksesuar Özellikleri</span>
-                  {showFeatures ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                </button>
+        {/* Tramer/Hasar Bilgileri */}
+        {showResults && (
+          <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Tramer/Hasar Bilgileri</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(damageStatus).map(([key, value]) => {
+                const partNames: {[key: string]: string} = {
+                  'chassis': 'Şasi',
+                  'engine': 'Motor',
+                  'transmission': 'Şanzıman',
+                  'frontFork': 'Ön Amortisör',
+                  'fuelTank': 'Yakıt Deposu',
+                  'electrical': 'Elektrik Sistemi',
+                  'frontPanel': 'Ön Panel',
+                  'rearPanel': 'Arka Panel',
+                  'exhaust': 'Egzoz'
+                };
                 
-                {showFeatures && (
-                  <div className="p-4 border-t border-gray-300 dark:border-gray-600 space-y-4">
-                    {/* Güvenlik */}
-                    <div>
-                      <h4 className="text-gray-900 dark:text-white font-medium mb-3">Güvenlik</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {Object.entries(technicalFeatures).map(([key, value]) => (
-                          <label key={key} className="inline-flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={value}
-                              onChange={(e) => setTechnicalFeatures(prev => ({
-                                ...prev,
-                                [key]: e.target.checked
-                              }))}
-                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                              {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Aksesuar */}
-                    <div>
-                      <h4 className="text-gray-900 dark:text-white font-medium mb-3">Aksesuar</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {Object.entries(accessories).map(([key, value]) => (
-                          <label key={key} className="inline-flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={value}
-                              onChange={(e) => setAccessories(prev => ({
-                                ...prev,
-                                [key]: e.target.checked
-                              }))}
-                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                              {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
+                return (
+                  <div key={key} className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {partNames[key] || key}
+                    </label>
+                    <select
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={value.status}
+                      onChange={(e) => handleDamageStatusChange(key, e.target.value)}
+                    >
+                      <option value="Orijinal">Orijinal</option>
+                      <option value="Boyalı">Boyalı</option>
+                      <option value="Değişen">Değişen</option>
+                      <option value="Hasarlı">Hasarlı</option>
+                    </select>
                   </div>
-                )}
-              </div>
-
-              {/* Hasar/Tramer Dropdown */}
-              <div className="border border-gray-300 dark:border-gray-600 rounded-lg">
-                <button
-                  onClick={() => setShowDamage(!showDamage)}
-                  className="w-full flex items-center justify-between p-4 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <span className="font-medium">Hasar/Tramer Durumu</span>
-                  {showDamage ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                </button>
-                
-                {showDamage && (
-                  <div className="p-4 border-t border-gray-300 dark:border-gray-600">
-                    <div className="grid grid-cols-1 gap-4">
-                      {Object.entries(damageStatus).map(([key, value]) => {
-                        const partNames: {[key: string]: string} = {
-                          'chassis': 'Şasi',
-                          'engine': 'Motor',
-                          'transmission': 'Şanzıman',
-                          'frontFork': 'Ön Amortisör',
-                          'fuelTank': 'Yakıt Deposu',
-                          'electrical': 'Elektrik Sistemi',
-                          'frontPanel': 'Ön Panel',
-                          'rearPanel': 'Arka Panel',
-                          'exhaust': 'Egzoz'
-                        };
-                        
-                        return (
-                          <div key={key} className="grid grid-cols-2 gap-4 items-center">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              {partNames[key] || key}
-                            </span>
-                            <select
-                              className="rounded-md border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              value={value.status}
-                              onChange={(e) => handleDamageStatusChange(key, e.target.value)}
-                            >
-                              <option value="Orijinal">Orijinal</option>
-                              <option value="Boyalı">Boyalı</option>
-                              <option value="Değişen">Değişen</option>
-                              <option value="Hasarlı">Hasarlı</option>
-                            </select>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+                );
+              })}
             </div>
 
             {/* Fiyat Hesapla Butonu */}
             <div className="mt-6 flex justify-center">
               <button
                 onClick={handleCalculatePrice}
-                disabled={calculating || !mileage || !condition}
+                disabled={calculating}
                 className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
               >
                 {calculating ? (
@@ -854,57 +764,108 @@ export function Calculator() {
           </div>
         )}
 
-        {/* Fiyat Hesaplama Sonucu */}
-        {priceResult && (
-          <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Hesaplama Sonucu</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Sahibinden Ortalaması */}
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
-                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Sahibinden Ortalaması</h3>
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-500">
-                  {new Intl.NumberFormat('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  }).format(priceResult.sahibindenAverage)}
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Piyasa verileri</p>
-              </div>
 
-              {/* Algoritma Sonucu */}
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
-                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Algoritma Sonucu</h3>
-                <div className="text-2xl font-bold text-orange-600 dark:text-orange-500">
-                  {new Intl.NumberFormat('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  }).format(priceResult.algorithmResult)}
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Bizim hesaplama</p>
-              </div>
 
-              {/* Genel Sonuç */}
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 text-center border-2 border-green-500">
-                <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Genel Sonuç</h3>
-                <div className="text-3xl font-bold text-green-600 dark:text-green-500">
-                  {new Intl.NumberFormat('tr-TR', {
-                    style: 'currency',
-                    currency: 'TRY',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  }).format(priceResult.finalResult)}
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Ortalama değer</p>
-              </div>
+        {/* Sonuç Yoksa */}
+        {showResults && listings.length === 0 && (
+          <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700 text-center">
+            <div className="text-gray-500 dark:text-gray-400">
+              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Sonuç Bulunamadı</h3>
+              <p className="text-sm">Arama kriterlerinize uygun ilan bulunamadı. Lütfen filtrelerinizi gözden geçirin.</p>
             </div>
+          </div>
+        )}
 
-            <div className="mt-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-              {selectedBrand} {selectedModel} {selectedSubModel} - {mileage} km - {condition}
+        {/* Detay Modal */}
+        {showDetailModal && selectedListing && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">İlan Detayı</h2>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 relative border border-gray-200 dark:border-gray-600 overflow-hidden">
+                  <img
+                    src={selectedListing.image}
+                    alt={selectedListing.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "/src/moto-image.jpg";
+                    }}
+                  />
+                </div>
+
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  {selectedListing.title}
+                </h3>
+                
+                <div className="text-3xl font-bold text-green-600 dark:text-green-500 mb-6">
+                  {selectedListing.price}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300 mb-6">
+                  <div><strong>Marka:</strong> {selectedListing.classifiedDetails.brand}</div>
+                  <div><strong>Model:</strong> {selectedListing.classifiedDetails.model}</div>
+                  <div><strong>Yıl:</strong> {selectedListing.classifiedDetails.year}</div>
+                  <div><strong>Kilometre:</strong> {selectedListing.classifiedDetails.mileage} km</div>
+                  <div><strong>Durum:</strong> {selectedListing.classifiedDetails.condition}</div>
+                  <div><strong>Motor Hacmi:</strong> {selectedListing.classifiedDetails.engineCapacity}</div>
+                  <div><strong>Motor Gücü:</strong> {selectedListing.classifiedDetails.enginePower}</div>
+                  <div><strong>Tip:</strong> {selectedListing.classifiedDetails.type}</div>
+                  <div><strong>Konum:</strong> {selectedListing.location}</div>
+                  <div><strong>Tarih:</strong> {selectedListing.date}</div>
+                </div>
+
+                {selectedListing.classifiedDetails.securityFeatures.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Güvenlik Özellikleri</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedListing.classifiedDetails.securityFeatures.map((feature, index) => (
+                        <span
+                          key={index}
+                          className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full text-sm"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedListing.classifiedDetails.accessories.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Aksesuarlar</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedListing.classifiedDetails.accessories.map((accessory, index) => (
+                        <span
+                          key={index}
+                          className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 px-3 py-1 rounded-full text-sm"
+                        >
+                          {accessory}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <a
+                  href={`https://sahibinden.com${selectedListing.link}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  <ExternalLink className="h-5 w-5" />
+                  Sahibinden'de Gör
+                </a>
+              </div>
             </div>
           </div>
         )}
