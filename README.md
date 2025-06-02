@@ -1,293 +1,168 @@
-# Supabase CLI (v1)
-
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
-
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
-
-This repository contains all the functionality for Supabase CLI.
-
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
-
-## Getting started
-
-### Install the CLI
-
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
-
-```bash
-npm i supabase --save-dev
-```
-
-To install the beta release channel:
-
-```bash
-npm i supabase@beta --save-dev
-```
-
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
-
-```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
-```
-
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
-
-<details>
-  <summary><b>macOS</b></summary>
-
-  Available via [Homebrew](https://brew.sh). To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Windows</b></summary>
-
-  Available via [Scoop](https://scoop.sh). To install:
-
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
-
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
-
-```bash
-supabase bootstrap
-```
-
-Or using npx:
-
-```bash
-npx supabase bootstrap
-```
-
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
-
-## Docs
-
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
-
-## Breaking changes
-
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
-
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
-
-## Developing
-
-To run from source:
-
-```sh
-# Go >= 1.22
-go run . help
-```
-
 # MotoValue Update
 
-A modern web application for motorcycle value estimation and management, built with React, TypeScript, and Supabase.
+Motosiklet değerleme ve fiyat hesaplama sistemi - Modern web uygulaması
 
-## 🚀 Features
+## 🚀 Proje Özeti
 
-- **User Authentication**: Secure login and registration system
-- **Motorcycle Value Calculator**: Advanced algorithm for accurate motorcycle value estimation
-- **Dashboard**: User-friendly interface for managing your motorcycles
-- **History Tracking**: Keep track of all your previous valuations
-- **Admin Panel**: Comprehensive admin interface for system management
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
+MotoValue, motosiklet sahipleri ve alıcıları için geliştirilmiş kapsamlı bir değerleme platformudur. Gelişmiş algoritma ve gerçek piyasa verilerini kullanarak doğru fiyat tahminleri sunar.
 
-## 🛠️ Tech Stack
+## ✨ Özellikler
 
-- **Frontend**:
-  - React with TypeScript
-  - Tailwind CSS with DaisyUI for styling
-  - Vite for build tooling
-  - Anime.js for animations
+### 🎯 Ana Özellikler
+- **Akıllı Fiyat Hesaplama**: Algoritma tabanlı ve Sahibinden verilerini birleştiren hibrit sistem
+- **3 Katmanlı Seçim Sistemi**: Marka → Model → Varyant hiyerarşik seçimi
+- **Gerçek Zamanlı Piyasa Verileri**: Sahibinden.com entegrasyonu ile güncel ilan verileri
+- **Tramer/Hasar Değerlendirmesi**: 9 farklı parça için detaylı hasar durumu analizi
+- **Responsive Tasarım**: Mobil ve desktop uyumlu modern arayüz
 
-- **Backend**:
-  - Supabase for database and authentication
-  - Firebase for additional services
+### 🔧 Gelişmiş Özellikler
+- **Otomatik Fiyat Güncelleme**: Tramer bilgisi değişince anlık hesaplama
+- **Karşılaştırmalı Fiyatlandırma**: Sahibinden ortalaması, algoritma sonucu ve genel ortalama
+- **Filtreleme Sistemi**: Yıl, kilometre aralığı ve araç durumu filtreleri
+- **Detaylı Modal Görünüm**: İlan detayları için popup ekranı
+- **Breadcrumb Navigasyon**: Seçim sürecini gösteren yol haritası
 
-## 📋 Prerequisites
+### 🎨 UI/UX İyileştirmeleri (Son Güncellemeler)
+- **3 Kolonlu Grid Layout**: Optimal görsel dengeleme
+- **Collapsible Sonuç Alanı**: 20px yükseklikte minimal başlık
+- **Türkçe Araç Durumu Seçenekleri**: İkinci El, Yurtdışından İthal Sıfır, Yetkili Bayiden Sıfır
+- **Temizlenmiş Arayüz**: Gereksiz butonların kaldırılması
+- **Gap Optimizasyonu**: İyileştirilmiş boşluk düzenlemesi
 
-Before you begin, ensure you have the following installed:
-- Node.js (v18 or higher)
-- npm or yarn
+## 🛠️ Teknoloji Stack'i
+
+### Frontend
+- **React 18** + **TypeScript** - Modern, tip güvenli geliştirme
+- **Tailwind CSS** - Utility-first CSS framework
+- **Lucide React** - Tutarlı icon seti
+- **React Router Dom** - Client-side routing
+- **React Hot Toast** - Kullanıcı bildirimleri
+
+### Backend & Database
+- **Supabase** - Backend-as-a-Service
+- **PostgreSQL** - İlişkisel veritabanı
+- **Row Level Security (RLS)** - Güvenlik politikaları
+- **RPC Functions** - Sunucu tarafı hesaplama logikleri
+
+### Development Tools
+- **Vite** - Hızlı build tooling
+- **ESLint** + **TypeScript** - Kod kalitesi ve tip kontrolü
+- **Git** - Versiyon kontrolü
+
+## 📊 Database Schema
+
+### Ana Tablolar
+```sql
+motorcycles        -- Motosiklet katalog verileri
+dealers           -- Bayi bilgileri  
+dealer_users      -- Kullanıcı yetkilendirmeleri
+price_algorithms  -- Fiyat hesaplama parametreleri
+price_calculations -- Hesaplama geçmişi
+```
+
+### Güvenlik
+- **RLS Policies**: Tüm tablolarda satır düzeyi güvenlik
+- **Role-based Access**: Kullanıcı, admin, bayi rolleri
+- **Authenticated Access**: Supabase Auth entegrasyonu
+
+## 🚀 Kurulum
+
+### Gereksinimler
+- Node.js 18+ 
+- npm/yarn
 - Git
 
-## 🔧 Installation
-
-1. Clone the repository:
+### Adımlar
+1. **Repository'yi klonlayın**
 ```bash
 git clone https://github.com/umutcanbostancii/MotoValue-Update.git
 cd MotoValue-Update
 ```
 
-2. Install dependencies:
+2. **Bağımlılıkları yükleyin**
 ```bash
 npm install
-# or
-yarn install
 ```
 
-3. Create a `.env` file in the root directory and add your environment variables:
-```env
-VITE_SUPABASE_URL=your_supabase_url
+3. **Environment dosyasını oluşturun**
+```bash
+# .env
+VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-4. Start the development server:
+4. **Development server'ı başlatın**
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-## 🏗️ Project Structure
+## 📱 Kullanım
 
+### Fiyat Hesaplama Süreci
+1. **Marka Seçimi**: Sol kolondan motosiklet markasını seçin
+2. **Model Seçimi**: Orta kolondan model seçin  
+3. **Varyant Seçimi**: Sağ kolondan spesifik varyantı seçin (opsiyonel)
+4. **Filtre Belirleme**: Yıl, kilometre ve araç durumu seçin
+5. **Arama**: "Fiyat Hesapla" butonuna tıklayın
+6. **Sonuçları İnceleyin**: 3 farklı fiyat karşılaştırması görün
+7. **Tramer Güncellemesi**: Hasar durumunu güncelleyerek yeni fiyat alın
+
+### Sahibinden Entegrasyonu
+- **Gerçek Veriler**: JSON dosyasından yüklenen aktüel ilan verileri
+- **Detaylı Görünüm**: Her ilan için "Kartı Aç" butonu
+- **Dış Bağlantı**: "Git" butonu ile Sahibinden.com'a yönlendirme
+
+## 🔧 Geliştirme Komutları
+
+```bash
+npm run dev          # Development server (http://localhost:5173)
+npm run build        # Production build
+npm run preview      # Preview production build  
+npm run lint         # ESLint kontrolü
+npm run type-check   # TypeScript tip kontrolü
 ```
-src/
-├── components/
-│   ├── auth/          # Authentication components
-│   ├── layout/        # Layout components
-│   └── pages/         # Page components
-├── contexts/          # React contexts
-├── lib/              # Utility functions and configurations
-└── main.tsx         # Application entry point
-```
 
-## 📚 Available Scripts
+## 📈 Son Güncellemeler (Aralık 2024 - Ocak 2025)
 
-- `npm run dev`: Start development server
-- `npm run build`: Build for production
-- `npm run preview`: Preview production build
-- `npm run lint`: Run ESLint
-- `npm run type-check`: Run TypeScript type checking
+### 🎯 Calculator Redesign (v2.0)
+- ✅ **Dublicate KM alanı sorunu çözüldü**
+- ✅ **3 kolonlu optimizasyon** (4'ten 3'e düşürüldü)
+- ✅ **Türkçe araç durumu** seçenekleri eklendi
+- ✅ **Collapsible Sahibinden sonuçları** (20px header)
+- ✅ **Otomatik fiyat hesaplama** (tramer değişiminde)
+- ✅ **Gereksiz buton temizliği** (Fiyat Hesapla dublication)
 
-## 🔐 Environment Variables
+### 🔍 Performans İyileştirmeleri
+- ✅ **State optimizasyonu** gereksiz re-render'ları önlendi
+- ✅ **Async/await** pattern'leri iyileştirildi
+- ✅ **Error handling** geliştirildi
+- ✅ **Loading states** kullanıcı deneyimi artırıldı
 
-The following environment variables are required:
+## 🤝 Katkıda Bulunma
 
-- `VITE_SUPABASE_URL`: Your Supabase project URL
-- `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+1. Fork edin
+2. Feature branch oluşturun (`git checkout -b feature/YeniOzellik`)
+3. Değişikliklerinizi commit edin (`git commit -am 'Yeni özellik eklendi'`)
+4. Branch'inizi push edin (`git push origin feature/YeniOzellik`)
+5. Pull Request oluşturun
 
-## 🤝 Contributing
+## 📄 Lisans
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Bu proje MIT lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE) dosyasına bakın.
 
-## 📄 License
+## 👨‍💻 Geliştirici
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**Umutcan Bostancı**
+- GitHub: [@umutcanbostancii](https://github.com/umutcanbostancii)
+- Email: umutcanbostanci@example.com
 
-## 👥 Authors
+## 🙏 Teşekkürler
 
-- **Umutcan Bostanci** - *Initial work* - [umutcanbostancii](https://github.com/umutcanbostancii)
+- **Supabase** - Güçlü backend altyapısı için
+- **React Team** - Harika geliştirme deneyimi için  
+- **Tailwind CSS** - Modern ve hızlı styling için
+- **Sahibinden.com** - Piyasa verileri referansı için
 
-## 🙏 Acknowledgments
+---
 
-- Thanks to all contributors who have helped shape MotoValue
-- Supabase team for their excellent backend-as-a-service
-- React and TypeScript communities for their amazing tools
+⭐ **Projeyi beğendiyseniz yıldızlamayı unutmayın!**
