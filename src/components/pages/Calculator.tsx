@@ -11,6 +11,7 @@ import {
   ErrorType,
   AppError 
 } from '../../utils/errorHandling';
+import { trackDatabaseQuery } from '../../utils/performanceMonitor';
 
 interface SearchFilters {
   brand: string;
@@ -316,17 +317,22 @@ export function Calculator() {
   }, []);
 
   const fetchBrands = async () => {
+    const tracker = trackDatabaseQuery('Brand Listesi');
+    tracker.start();
+    
     try {
       checkNetworkStatus();
       dispatch({ type: 'SET_LOADING', payload: true });
       
       await withRetry(async () => {
+        // Optimize edilmiş distinct brand sorgusu - idx_motorcycles_brand index kullanır
         const { data, error } = await supabase
           .from('motorcycles')
           .select('brand')
           .order('brand', { ascending: true });
 
         if (error) {
+          tracker.end(false, error.message);
           throw new AppError(
             ErrorType.DATA_NOT_FOUND,
             'Marka listesi yüklenemedi. Lütfen sayfayı yenilemeyi deneyiniz',
@@ -335,11 +341,16 @@ export function Calculator() {
           );
         }
 
-        const uniqueBrands = Array.from(new Set(data.map(m => m.brand))).sort();
+        // Set kullanarak duplicate'leri temizle - zaten sıralı gelir
+        const uniqueBrands = Array.from(new Set(data.map(m => m.brand)));
         dispatch({ type: 'SET_BRANDS', payload: uniqueBrands });
+        
+        const duration = tracker.end(true);
+        toast.success(`✅ ${uniqueBrands.length} marka yüklendi (${duration.toFixed(2)}ms)`);
       }, 3, 1000, 'Markalar yükleme');
       
     } catch (error) {
+      tracker.end(false, error instanceof Error ? error.message : 'Unknown error');
       handleError(error, {
         context: 'Markalar yükleme',
         onRetry: fetchBrands
@@ -352,11 +363,15 @@ export function Calculator() {
   const handleBrandSelect = useCallback(async (brand: string) => {
     dispatch({ type: 'SELECT_BRAND', payload: brand });
     
+    const tracker = trackDatabaseQuery(`${brand} Model Listesi`);
+    tracker.start();
+    
     try {
       validateRequired({ brand }, ['brand']);
       checkNetworkStatus();
       
       await withRetry(async () => {
+        // idx_motorcycles_brand_model composite index kullanarak optimize edilmiş sorgu
         const { data, error } = await supabase
           .from('motorcycles')
           .select('model')
@@ -364,6 +379,7 @@ export function Calculator() {
           .order('model', { ascending: true });
 
         if (error) {
+          tracker.end(false, error.message);
           throw new AppError(
             ErrorType.DATA_NOT_FOUND,
             `${brand} markasına ait modeller bulunamadı. Farklı bir marka seçmeyi deneyiniz`,
@@ -372,11 +388,16 @@ export function Calculator() {
           );
         }
 
-        const uniqueModels = Array.from(new Set(data.map(m => m.model))).sort();
+        // Index'ten sıralı gelir, sadece unique'leme yeterli
+        const uniqueModels = Array.from(new Set(data.map(m => m.model)));
         dispatch({ type: 'SET_MODELS', payload: uniqueModels });
+        
+        const duration = tracker.end(true);
+        toast.success(`✅ ${brand} için ${uniqueModels.length} model yüklendi (${duration.toFixed(2)}ms)`);
       }, 2, 800, `${brand} modelleri yükleme`);
       
     } catch (error) {
+      tracker.end(false, error instanceof Error ? error.message : 'Unknown error');
       handleError(error, {
         context: `${brand} modelleri yükleme`,
         onRetry: () => handleBrandSelect(brand)
@@ -469,7 +490,8 @@ export function Calculator() {
       checkNetworkStatus();
 
       await withRetry(async () => {
-        // Motosiklet ID'sini bul
+        // Covering index kullanarak optimize edilmiş motosiklet lookup
+        // idx_motorcycles_calculation_covering index'i kullanır
         const { data: motorcycleData, error: motorcycleError } = await supabase
           .from('motorcycles')
           .select('id, brand, model, year, price')
