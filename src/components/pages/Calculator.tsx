@@ -564,8 +564,8 @@ export function Calculator() {
                 </>
               ) : (
                 <>
-                  <Search className="h-5 w-5" />
-                  Sahibinden'de Ara
+                                <Search className="h-5 w-5" />
+              Fiyat Hesapla
                 </>
               )}
             </button>
@@ -741,26 +741,7 @@ export function Calculator() {
               })}
             </div>
 
-            {/* Fiyat Hesapla Butonu */}
-            <div className="mt-6 flex justify-center">
-              <button
-                onClick={handleCalculatePrice}
-                disabled={calculating}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
-              >
-                {calculating ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Hesaplanıyor...
-                  </>
-                ) : (
-                  <>
-                    <CalcIcon className="h-5 w-5" />
-                    Fiyat Hesapla
-                  </>
-                )}
-              </button>
-            </div>
+
           </div>
         )}
 
