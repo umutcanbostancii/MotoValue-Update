@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Calculator as CalcIcon, Search, ChevronDown, ChevronUp, ExternalLink, MapPin, Calendar, Gauge, Eye, X, Home, ChevronRight, Star, Shield, Settings } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Calculator as CalcIcon, Search, ChevronDown, ChevronUp, ExternalLink, X, Home, ChevronRight } from 'lucide-react';
 import { useSahibindenData, SahibindenListing } from '../../hooks/useSahibindenData';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -47,13 +47,11 @@ export function Calculator() {
   // UI state'leri
   const [showResults, setShowResults] = useState(false);
   const [showSimpleList, setShowSimpleList] = useState(false);
-  const [calculating, setCalculating] = useState(false);
   const [selectedListing, setSelectedListing] = useState<SahibindenListing | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Fiyat hesaplama
   const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
-  const [mileage, setMileage] = useState('');
   const [condition, setCondition] = useState('');
   
   // Hasar durumu (algoritma için)
@@ -69,8 +67,8 @@ export function Calculator() {
     exhaust: { status: 'Orijinal' },
   });
 
-  // Dropdown seçenekleri
-  const mileageRanges = [
+  // Dropdown seçenekleri - useMemo ile optimize edildi
+  const mileageRanges = useMemo(() => [
     // İlk 50k'da 5'er bin aralıklar
     { value: '0-5000', label: '0 - 5.000 km' },
     { value: '5001-10000', label: '5.001 - 10.000 km' },
@@ -108,14 +106,22 @@ export function Calculator() {
     { value: '270001-280000', label: '270.001 - 280.000 km' },
     { value: '280001-290000', label: '280.001 - 290.000 km' },
     { value: '290001-300000', label: '290.001 - 300.000 km' }
-  ];
+  ], []);
 
-  // 1980'den bugüne kadar tüm yıllar
-  const currentYear = new Date().getFullYear();
-  const years = [];
-  for (let year = currentYear; year >= 1980; year--) {
-    years.push({ value: year.toString(), label: year.toString() });
-  }
+  // 1980'den bugüne kadar tüm yıllar - useMemo ile optimize edildi
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const yearArray = [];
+    for (let year = currentYear; year >= 1980; year--) {
+      yearArray.push({ value: year.toString(), label: year.toString() });
+    }
+    return yearArray;
+  }, []);
+
+  // Breadcrumb için optimize edilmiş mileage label lookup - useMemo ile cache edildi
+  const selectedMileageLabel = useMemo(() => {
+    return filters.mileageRange ? mileageRanges.find(r => r.value === filters.mileageRange)?.label : '';
+  }, [filters.mileageRange, mileageRanges]);
 
   // ESKİ SİSTEM FONKSİYONLARI
   useEffect(() => {
@@ -142,7 +148,7 @@ export function Calculator() {
     }
   };
 
-  const handleBrandSelect = async (brand: string) => {
+  const handleBrandSelect = useCallback(async (brand: string) => {
     setSelectedBrand(brand);
     setSelectedModel('');
     setSelectedSubModel('');
@@ -164,9 +170,9 @@ export function Calculator() {
       console.error('Modeller yüklenirken hata:', error);
       toast.error('Modeller yüklenirken bir hata oluştu');
     }
-  };
+  }, []);
 
-  const handleModelSelect = async (model: string) => {
+  const handleModelSelect = useCallback(async (model: string) => {
     setSelectedModel(model);
     setSelectedSubModel('');
     setSubModels([]);
@@ -192,14 +198,14 @@ export function Calculator() {
     } catch (error) {
       console.error('Alt modeller yüklenirken hata:', error);
     }
-  };
+  }, [selectedBrand]);
 
-  const handleFilterChange = (key: keyof SearchFilters, value: string) => {
+  const handleFilterChange = useCallback((key: keyof SearchFilters, value: string) => {
     setFilters(prev => ({
       ...prev,
       [key]: value
     }));
-  };
+  }, []);
 
   const handleSearch = async () => {
     if (!selectedBrand || !selectedModel) {
@@ -232,7 +238,6 @@ export function Calculator() {
       return;
     }
 
-    setCalculating(true);
     try {
       // Motosiklet ID'sini bul
       const { data: motorcycleData, error: motorcycleError } = await supabase
@@ -287,12 +292,10 @@ export function Calculator() {
     } catch (error: any) {
       console.error('Hesaplama hatası:', error);
       toast.error(error.message || 'Fiyat hesaplanırken bir hata oluştu');
-    } finally {
-      setCalculating(false);
     }
   };
 
-  const calculatePrices = () => {
+  const calculatePrices = useCallback(() => {
     if (listings.length === 0) return;
 
     // Sahibinden ortalama fiyat hesaplama
@@ -314,9 +317,9 @@ export function Calculator() {
       algorithmResult: mockAlgorithmPrice,
       finalResult
     });
-  };
+  }, [listings]);
 
-  const handleDamageStatusChange = (key: string, value: string) => {
+  const handleDamageStatusChange = useCallback((key: string, value: string) => {
     setDamageStatus(prev => ({
       ...prev,
       [key]: { status: value }
@@ -324,20 +327,23 @@ export function Calculator() {
     
     // Tramer bilgisi değiştiğinde otomatik fiyat hesapla
     if (selectedBrand && selectedModel && filters.mileageRange && condition) {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         handleCalculatePrice();
       }, 100);
+      
+      // Memory leak önlemek için cleanup
+      return () => clearTimeout(timeoutId);
     }
-  };
+  }, [selectedBrand, selectedModel, filters.mileageRange, condition, handleCalculatePrice]);
 
   // Fiyat hesaplama otomatik olarak yapılsın
   useEffect(() => {
     if (listings.length > 0) {
       calculatePrices();
     }
-  }, [listings]);
+  }, [listings, calculatePrices]);
 
-  const resetSelection = () => {
+  const resetSelection = useCallback(() => {
     setSelectedBrand('');
     setSelectedModel('');
     setSelectedSubModel('');
@@ -353,7 +359,7 @@ export function Calculator() {
       mileageRange: '',
       condition: ''
     });
-  };
+  }, []);
 
   return (
     <div className="p-6">
@@ -388,7 +394,7 @@ export function Calculator() {
                     )}
                     {filters.mileageRange && (
                       <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 px-2 py-1 rounded text-xs">
-                        {mileageRanges.find(r => r.value === filters.mileageRange)?.label}
+                        {selectedMileageLabel}
                       </span>
                     )}
                     {filters.yearRange && (

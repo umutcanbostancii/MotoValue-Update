@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export interface SahibindenListing {
   id: string;
@@ -197,7 +197,7 @@ export const useSahibindenData = () => {
     }
   ];
 
-  const fetchSahibindenData = async (filters: {
+  const fetchSahibindenData = async (_filters: {
     brand: string;
     model: string;
     yearRange?: string;
