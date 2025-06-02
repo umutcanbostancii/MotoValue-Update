@@ -3,6 +3,14 @@ import { Calculator as CalcIcon, Search, ChevronDown, ChevronUp, ExternalLink, X
 import { useSahibindenData, SahibindenListing } from '../../hooks/useSahibindenData';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'react-hot-toast';
+import { 
+  handleError, 
+  withRetry, 
+  validateRequired, 
+  checkNetworkStatus, 
+  ErrorType,
+  AppError 
+} from '../../utils/errorHandling';
 
 interface SearchFilters {
   brand: string;
@@ -309,19 +317,33 @@ export function Calculator() {
 
   const fetchBrands = async () => {
     try {
+      checkNetworkStatus();
       dispatch({ type: 'SET_LOADING', payload: true });
-      const { data, error } = await supabase
-        .from('motorcycles')
-        .select('brand')
-        .order('brand', { ascending: true });
+      
+      await withRetry(async () => {
+        const { data, error } = await supabase
+          .from('motorcycles')
+          .select('brand')
+          .order('brand', { ascending: true });
 
-      if (error) throw error;
+        if (error) {
+          throw new AppError(
+            ErrorType.DATA_NOT_FOUND,
+            'Marka listesi yüklenemedi. Lütfen sayfayı yenilemeyi deneyiniz',
+            error.message,
+            true
+          );
+        }
 
-      const uniqueBrands = Array.from(new Set(data.map(m => m.brand))).sort();
-      dispatch({ type: 'SET_BRANDS', payload: uniqueBrands });
+        const uniqueBrands = Array.from(new Set(data.map(m => m.brand))).sort();
+        dispatch({ type: 'SET_BRANDS', payload: uniqueBrands });
+      }, 3, 1000, 'Markalar yükleme');
+      
     } catch (error) {
-      console.error('Markalar yüklenirken hata:', error);
-      toast.error('Markalar yüklenirken bir hata oluştu');
+      handleError(error, {
+        context: 'Markalar yükleme',
+        onRetry: fetchBrands
+      });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -331,19 +353,34 @@ export function Calculator() {
     dispatch({ type: 'SELECT_BRAND', payload: brand });
     
     try {
-      const { data, error } = await supabase
-      .from('motorcycles')
-      .select('model')
-      .eq('brand', brand)
-      .order('model', { ascending: true });
+      validateRequired({ brand }, ['brand']);
+      checkNetworkStatus();
+      
+      await withRetry(async () => {
+        const { data, error } = await supabase
+          .from('motorcycles')
+          .select('model')
+          .eq('brand', brand)
+          .order('model', { ascending: true });
 
-      if (error) throw error;
+        if (error) {
+          throw new AppError(
+            ErrorType.DATA_NOT_FOUND,
+            `${brand} markasına ait modeller bulunamadı. Farklı bir marka seçmeyi deneyiniz`,
+            error.message,
+            true
+          );
+        }
 
-      const uniqueModels = Array.from(new Set(data.map(m => m.model))).sort();
-      dispatch({ type: 'SET_MODELS', payload: uniqueModels });
+        const uniqueModels = Array.from(new Set(data.map(m => m.model))).sort();
+        dispatch({ type: 'SET_MODELS', payload: uniqueModels });
+      }, 2, 800, `${brand} modelleri yükleme`);
+      
     } catch (error) {
-      console.error('Modeller yüklenirken hata:', error);
-      toast.error('Modeller yüklenirken bir hata oluştu');
+      handleError(error, {
+        context: `${brand} modelleri yükleme`,
+        onRetry: () => handleBrandSelect(brand)
+      });
     }
   }, []);
 
@@ -378,12 +415,21 @@ export function Calculator() {
   }, []);
 
   const handleSearch = async () => {
-    if (!selectedBrand || !selectedModel) {
-      toast.error('Lütfen marka ve model seçiniz');
-        return;
-      }
-
     try {
+      // Validation with specific error messages
+      validateRequired(
+        { 
+          selectedBrand, 
+          selectedModel, 
+          yearRange: filters.yearRange, 
+          mileageRange: filters.mileageRange, 
+          condition 
+        }, 
+        ['selectedBrand', 'selectedModel', 'yearRange', 'mileageRange', 'condition']
+      );
+      
+      checkNetworkStatus();
+
       // Sahibinden araması için filtreleri hazırla
       const searchFilters = {
         brand: selectedBrand,
@@ -393,76 +439,108 @@ export function Calculator() {
         condition: filters.condition
       };
       
-      await fetchSahibindenData(searchFilters);
-      dispatch({ type: 'SET_SHOW_RESULTS', payload: true });
-      toast.success(`${listings.length} ilan bulundu`);
+      await withRetry(async () => {
+        await fetchSahibindenData(searchFilters);
+        dispatch({ type: 'SET_SHOW_RESULTS', payload: true });
+        toast.success(`${listings.length} ilan bulundu`);
+      }, 2, 1500, 'Sahibinden araması');
+      
     } catch (error) {
-      console.error('Arama hatası:', error);
-      toast.error('Arama sırasında bir hata oluştu');
+      handleError(error, {
+        context: 'Sahibinden araması',
+        onRetry: handleSearch
+      });
     }
   };
 
   const handleCalculatePrice = async () => {
-    if (!selectedBrand || !selectedModel || !filters.mileageRange || !condition) {
-      toast.error('Lütfen gerekli alanları doldurunuz');
-      return;
-    }
-
     try {
-      // Motosiklet ID'sini bul
-      const { data: motorcycleData, error: motorcycleError } = await supabase
-        .from('motorcycles')
-        .select('id, brand, model, year, price')
-        .eq('brand', selectedBrand)
-        .eq('model', selectedModel)
-        .limit(1)
-        .single();
-
-      if (motorcycleError || !motorcycleData) {
-        toast.error(`Motosiklet bilgisi bulunamadı: ${selectedBrand} ${selectedModel}`);
-        return;
-      }
+      // Comprehensive validation
+      validateRequired(
+        { 
+          selectedBrand, 
+          selectedModel, 
+          mileageRange: filters.mileageRange, 
+          condition 
+        }, 
+        ['selectedBrand', 'selectedModel', 'mileageRange', 'condition']
+      );
       
-      // Kilometre aralığından ortalama değer çıkar
-      const mileageValue = filters.mileageRange ? 
-        parseInt(filters.mileageRange.split('-')[1]) || 50000 : 50000;
+      checkNetworkStatus();
 
-      // RPC fonksiyonunu çağır
-      const { data: calculationData, error: calculationError } = await supabase
-        .rpc('calculate_motorcycle_price', {
-          input_motorcycle_id: motorcycleData.id,
-          input_mileage: mileageValue,
-          input_condition: condition,
-          input_damage_status: damageStatus
-        });
+      await withRetry(async () => {
+        // Motosiklet ID'sini bul
+        const { data: motorcycleData, error: motorcycleError } = await supabase
+          .from('motorcycles')
+          .select('id, brand, model, year, price')
+          .eq('brand', selectedBrand)
+          .eq('model', selectedModel)
+          .limit(1)
+          .single();
 
-      if (calculationError) {
-        throw new Error(calculationError.message);
-      }
+        if (motorcycleError || !motorcycleData) {
+          throw new AppError(
+            ErrorType.DATA_NOT_FOUND,
+            `${selectedBrand} ${selectedModel} modeli veritabanında bulunamadı. Lütfen farklı bir model seçiniz`,
+            motorcycleError?.message || 'Motorcycle not found',
+            false
+          );
+        }
+        
+        // Kilometre aralığından ortalama değer çıkar
+        const mileageValue = filters.mileageRange ? 
+          parseInt(filters.mileageRange.split('-')[1]) || 50000 : 50000;
 
-      if (!calculationData) {
-        throw new Error('Hesaplama yapılamadı');
-      }
+        // RPC fonksiyonunu çağır
+        const { data: calculationData, error: calculationError } = await supabase
+          .rpc('calculate_motorcycle_price', {
+            input_motorcycle_id: motorcycleData.id,
+            input_mileage: mileageValue,
+            input_condition: condition,
+            input_damage_status: damageStatus
+          });
 
-      // Sahibinden ortalaması hesapla
-      const sahibindenAverage = listings.length > 0 ? 
-        listings.map(listing => parseInt(listing.price.replace(/[^\d]/g, ''))).reduce((a, b) => a + b, 0) / listings.length :
-        425000; // Varsayılan değer
+        if (calculationError) {
+          throw new AppError(
+            ErrorType.CALCULATION_ERROR,
+            'Fiyat hesaplanamadı. Lütfen kilometre ve hasar bilgilerini kontrol edip tekrar deneyiniz',
+            calculationError.message,
+            true
+          );
+        }
 
-      const algorithmResult = calculationData.calculated_price;
-      const finalResult = Math.round((sahibindenAverage + algorithmResult) / 2);
+        if (!calculationData) {
+          throw new AppError(
+            ErrorType.CALCULATION_ERROR,
+            'Fiyat hesaplama servisi yanıt vermedi. Lütfen tekrar deneyiniz',
+            'No calculation data returned',
+            true
+          );
+        }
 
-      dispatch({ type: 'SET_PRICE_RESULT', payload: {
-        sahibindenAverage,
-        algorithmResult,
-        finalResult
-      } });
+        // Sahibinden ortalaması hesapla
+        const sahibindenAverage = listings.length > 0 ? 
+          listings.map(listing => parseInt(listing.price.replace(/[^\d]/g, ''))).reduce((a, b) => a + b, 0) / listings.length :
+          425000; // Varsayılan değer
 
-      toast.success('Fiyat hesaplama tamamlandı!');
+        const algorithmResult = calculationData.calculated_price;
+        const finalResult = Math.round((sahibindenAverage + algorithmResult) / 2);
+
+        dispatch({ type: 'SET_PRICE_RESULT', payload: {
+          sahibindenAverage,
+          algorithmResult,
+          finalResult
+        } });
+
+        toast.success('Fiyat hesaplama tamamlandı!');
+      }, 2, 2000, 'Fiyat hesaplama');
+      
     } catch (error: any) {
-        console.error('Hesaplama hatası:', error);
-        toast.error(error.message || 'Fiyat hesaplanırken bir hata oluştu');
-      }
+      handleError(error, {
+        context: 'Fiyat hesaplama',
+        onRetry: handleCalculatePrice
+      });
+    }
   };
 
   const calculatePrices = useCallback(() => {
