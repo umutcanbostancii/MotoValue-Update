@@ -9,6 +9,9 @@ import {
 } from "@microsoft/signalr";
 import { useEffect, useState } from "react";
 import { SignalRContext } from "../../SignalR/SignalRContext";
+import { PrimeReactProvider } from "primereact/api";
+import "./layout.css";
+
 const SOCKET_API_URL = import.meta.env.VITE_SOCKET_API_URL;
 
 export function Layout() {
@@ -37,16 +40,18 @@ export function Layout() {
   }, []);
 
   return (
-    <SignalRContext.Provider value={{ connection }}>
-      <div className={`flex h-screen ${isDark ? "dark" : ""}`}>
-        <Sidebar />
-        <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
-          <TopBar />
-          <main className="flex-1 overflow-y-auto">
-            <Outlet />
-          </main>
+    <PrimeReactProvider>
+      <SignalRContext.Provider value={{ connection }}>
+        <div className={`flex h-screen ${isDark ? "dark" : ""}`}>
+          <Sidebar />
+          <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
+            <TopBar />
+            <main className="flex-1 overflow-y-auto">
+              <Outlet />
+            </main>
+          </div>
         </div>
-      </div>
-    </SignalRContext.Provider>
+      </SignalRContext.Provider>
+    </PrimeReactProvider>
   );
 }

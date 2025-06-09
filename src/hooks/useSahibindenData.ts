@@ -8,7 +8,7 @@ interface SahibindenListing {
   location: string;
   image: string;
   link: string;
-  classifiedDetails: {
+  detail: {
     brand: string;
     model: string;
     year: string;
@@ -53,7 +53,7 @@ export const useSahibindenData = () => {
       location: "İstanbul Üsküdar",
       image: "https://i0.shbdn.com/photos/10/31/43/lthmb_1249103143gy2.jpg",
       link: "/ilan/vasita-motosiklet-ducati-hatasiz-dusuk-km-ful-ppf-kapli-aksesuarli-ducati-sf-v2-20-kdv-1249103143/detay",
-      classifiedDetails: {
+      detail: {
         brand: "Ducati",
         model: "Streetfighter V2",
         year: "2023",
@@ -78,7 +78,7 @@ export const useSahibindenData = () => {
       location: "Bursa Nilüfer",
       image: "https://i0.shbdn.com/photos/75/95/98/lthmb_1229759598t08.jpg",
       link: "/ilan/vasita-motosiklet-ducati-street-fighter-v2-kredi-karti-odeme-imkani-1229759598/detay",
-      classifiedDetails: {
+      detail: {
         brand: "Ducati",
         model: "Streetfighter V2",
         year: "2024",
@@ -103,7 +103,7 @@ export const useSahibindenData = () => {
       location: "Adana Kozan",
       image: "https://i0.shbdn.com/photos/32/70/43/lthmb_1247327043kw6.jpg",
       link: "/ilan/vasita-motosiklet-ducati-2023-model-ducati-streetfighter-v2-1247327043/detay",
-      classifiedDetails: {
+      detail: {
         brand: "Ducati",
         model: "Streetfighter V2",
         year: "2023",
@@ -128,7 +128,7 @@ export const useSahibindenData = () => {
       location: "Ankara Çankaya",
       image: "https://i0.shbdn.com/photos/20/77/37/lthmb_1247207737y2u.jpg",
       link: "/ilan/vasita-motosiklet-ducati-2022-kasim-cikisli-streetfighter-v2-1113-euro-aksesuarli-1247207737/detay",
-      classifiedDetails: {
+      detail: {
         brand: "Ducati",
         model: "Streetfighter V2",
         year: "2022",
@@ -158,7 +158,7 @@ export const useSahibindenData = () => {
       location: "İstanbul Ataşehir",
       image: "https://i0.shbdn.com/photos/00/45/38/lthmb_12460045382zd.jpg",
       link: "/ilan/vasita-motosiklet-ducati-korlas-atasehirden-streetfighter-v2-1246004538/detay",
-      classifiedDetails: {
+      detail: {
         brand: "Ducati",
         model: "Streetfighter V2",
         year: "2023",
@@ -183,7 +183,7 @@ export const useSahibindenData = () => {
       location: "Ankara Gölbaşı",
       image: "https://i0.shbdn.com/photos/33/04/67/lthmb_1232330467hd5.jpg",
       link: "/ilan/vasita-motosiklet-ducati-ducati-sonmezler-ankara-street-fighter-v2-1232330467/detay",
-      classifiedDetails: {
+      detail: {
         brand: "Ducati",
         model: "Streetfighter V2",
         year: "2024",

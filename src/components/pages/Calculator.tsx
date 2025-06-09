@@ -13,7 +13,16 @@ import { Brand } from "../../types/Brand";
 import { Model } from "../../types/Model";
 import { useSignalR } from "../../SignalR/SignalRContext";
 import { SahibindenListing } from "../../types/SahibindenListing";
+import { Dropdown } from "primereact/dropdown";
+import { DamageStatus } from "../../types/DamageStatus";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
+import { InputNumber } from "primereact/inputnumber";
 const API_URL = import.meta.env.VITE_API_URL;
+
+const MySwal = withReactContent(Swal);
 
 export function Calculator() {
   const mileageRanges = useMemo(
@@ -63,9 +72,11 @@ export function Calculator() {
 
   const [loading, setLoading] = useState(true);
   const [sahibindenLoading, setSahibindenLoading] = useState(false);
-  const [showSimpleList, setShowSimpleList] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [showSimpleList, setShowSimpleList] = useState(true);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [priceResult, setPriceResult] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [listings, setListings] = useState<SahibindenListing[]>([]);
@@ -78,6 +89,32 @@ export function Calculator() {
   const [milageRange, setMilageRange] = useState<string | "">("");
   const [condition, setCondition] = useState<string>("");
 
+  const [damageStatus, setDamageStatus] = useState<DamageStatus>({
+    chassis: { status: "Orijinal" },
+    engine: { status: "Orijinal" },
+    transmission: { status: "Orijinal" },
+    frontFork: { status: "Orijinal" },
+    fuelTank: { status: "Orijinal" },
+    electrical: { status: "Orijinal" },
+    frontPanel: { status: "Orijinal" },
+    rearPanel: { status: "Orijinal" },
+    exhaust: { status: "Orijinal" },
+  });
+
+  const [percentage, setPercentage] = useState(0);
+
+  const [averages, setAverages] = useState({
+    marketAveragePrice: 0,
+    algorithmAveragePrice: 0,
+    generalAveragePrice: 0,
+  });
+
+  const [calculatedPrices, setCalculatedPrices] = useState<{
+    market: number;
+    algorithm: number;
+    general: number;
+  } | null>(null);
+
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 51 }, (_, i) => currentYear - i);
 
@@ -89,19 +126,38 @@ export function Calculator() {
     if (!connection) return;
 
     const handler = (datas: SahibindenListing[]) => {
-      console.log("Received scraped data:", datas);
       setSahibindenLoading(false);
       if (datas.length === 0) {
-        setShowResult(true);
+        setShowResult(false);
+        setPriceResult(false);
         return;
       }
+
       setListings(datas);
+      const calculatedAverages = calculatePriceAverages(datas);
+      setAverages(calculatedAverages);
+      setShowResult(true);
+      setPriceResult(true);
+    };
+
+    const handleError = (error: string) => {
+      setSahibindenLoading(false);
+      setShowResult(false);
+      setPriceResult(false);
+      MySwal.fire({
+        title: "Hata",
+        text: error,
+        icon: "error",
+        confirmButtonText: "Tamam",
+      });
     };
 
     connection.on("ReceiveScrapedData", handler);
+    connection.on("ReceiveScrapeError", handleError);
 
     return () => {
       connection.off("ReceiveScrapedData", handler);
+      connection.off("ReceiveScrapeError", handler);
     };
   }, [connection]);
 
@@ -182,6 +238,112 @@ export function Calculator() {
     }
   };
 
+  const calculatePriceAverages = (motorcycleData: SahibindenListing[]) => {
+    if (!motorcycleData || motorcycleData.length === 0) {
+      return {
+        marketAveragePrice: 0,
+        algorithmAveragePrice: 0,
+        generalAveragePrice: 0,
+      };
+    }
+
+    const marketAverage =
+      motorcycleData.reduce((sum, item) => {
+        const price = parseFloat(item.price.replace(/[^0-9]/g, ""));
+        return sum + price;
+      }, 0) / motorcycleData.length;
+
+    const algorithmPrices = motorcycleData.map((item) => {
+      const basePrice = parseFloat(item.price.replace(/[^0-9]/g, ""));
+
+      const currentYear = new Date().getFullYear();
+      const age = currentYear - parseInt(item.detail.year);
+      const yearDepreciation = Math.min(0.1 * age, 0.7);
+      let price = basePrice * (1 - yearDepreciation);
+
+      const mileage = parseInt(item.detail.mileage.replace(/[^0-9]/g, "")) || 0;
+      const mileageDepreciation = Math.min((mileage / 10000) * 0.05, 0.3);
+      price *= 1 - mileageDepreciation;
+
+      const engineCC = parseInt(item.detail.engineCapacity.split(" ")[0]);
+      if (engineCC > 1000) price *= 1.2;
+      else if (engineCC > 750) price *= 1.15;
+      else if (engineCC > 500) price *= 1.1;
+
+      if (item.detail.type.includes("Sport")) price *= 1.15;
+      else if (item.detail.type.includes("Adventure")) price *= 1.1;
+
+      if (item.detail.accessories?.length) {
+        price *= 1 + 0.05 * item.detail.accessories.length;
+      }
+
+      return Math.max(Math.min(price, basePrice * 1.5), basePrice * 0.4);
+    });
+
+    const algorithmAverage =
+      algorithmPrices.reduce((sum, price) => sum + price, 0) /
+      algorithmPrices.length;
+
+    const generalAverage = (marketAverage + algorithmAverage) / 2;
+
+    return {
+      marketAveragePrice: marketAverage,
+      algorithmAveragePrice: algorithmAverage,
+      generalAveragePrice: generalAverage,
+    };
+  };
+
+  const handleDamageStatusChange = (key: string, value: string) => {
+    setDamageStatus((prev) => ({
+      ...prev,
+      [key]: { status: value },
+    }));
+    console.log("Damage status changed:", key, value);
+  };
+
+  const handleCalculateProfit = () => {
+    const factor = (100 + percentage) / 100;
+
+    setCalculatedPrices({
+      market: Number((averages.marketAveragePrice / factor).toFixed(2)),
+      algorithm: Number((averages.algorithmAveragePrice / factor).toFixed(2)),
+      general: Number((averages.generalAveragePrice / factor).toFixed(2)),
+    });
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: "TRY",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const handleClose = () => {
+    setVisible(false);
+    setPercentage(0);
+    setCalculatedPrices(null);
+  };
+
+  const footerContent = (
+    <div className="flex justify-end gap-2 px-4 py-2">
+      <Button
+        label="Hesapla"
+        icon="pi pi-check"
+        onClick={handleCalculateProfit}
+        autoFocus
+        className="bg-blue-600 text-white hover:bg-blue-700 font-medium py-2 px-4 rounded flex items-center gap-2"
+      />
+      <Button
+        label="Kapat"
+        icon="pi pi-times"
+        onClick={handleClose}
+        className="bg-red-600 text-white hover:bg-red-700 font-medium py-2 px-4 rounded flex items-center gap-2"
+      />
+    </div>
+  );
+
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -247,33 +409,27 @@ export function Calculator() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Markalar */}
+
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Markalar
               </h3>
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto border border-gray-200 dark:border-gray-600">
-                {loading ? (
-                  <div className="text-gray-500 dark:text-gray-400">
-                    Yükleniyor...
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {brands.map((brand) => (
-                      <button
-                        key={brand.id}
-                        onClick={() => handleBrandSelect(brand.id)}
-                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                          selectedBrandId === brand.id
-                            ? "bg-blue-600 text-white"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white"
-                        }`}
-                      >
-                        {brand.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+
+              {loading ? (
+                <div className="text-gray-500 dark:text-gray-400">
+                  Yükleniyor...
+                </div>
+              ) : (
+                <Dropdown
+                  onChange={(e) => handleBrandSelect(e.value.id)}
+                  value={brands.find((b) => b.id === selectedBrandId) || null}
+                  options={brands}
+                  optionLabel="name"
+                  placeholder="Marka Seçin"
+                  filter
+                  className="w-full"
+                />
+              )}
             </div>
 
             {/* Modeller */}
@@ -281,33 +437,25 @@ export function Calculator() {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Modeller
               </h3>
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 h-64 overflow-y-auto border border-gray-200 dark:border-gray-600">
-                {!selectedBrandId ? (
-                  <div className="text-gray-500 dark:text-gray-400">
-                    Önce marka seçiniz
-                  </div>
-                ) : models.length === 0 ? (
-                  <div className="text-gray-500 dark:text-gray-400">
-                    Model bulunamadı
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {models.map((model) => (
-                      <button
-                        key={model.id}
-                        onClick={() => handleModelSelect(model.id)}
-                        className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                          selectedModelId === model.id
-                            ? "bg-blue-600 text-white"
-                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white"
-                        }`}
-                      >
-                        {model.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {!selectedBrandId ? (
+                <div className="text-gray-500 dark:text-gray-400">
+                  Önce marka seçiniz
+                </div>
+              ) : models.length === 0 ? (
+                <div className="text-gray-500 dark:text-gray-400">
+                  Model bulunamadı
+                </div>
+              ) : (
+                <Dropdown
+                  onChange={(e) => handleModelSelect(e.value.id)}
+                  value={models.find((b) => b.id === selectedModelId) || null}
+                  options={models}
+                  optionLabel="name"
+                  placeholder="Model Seçin"
+                  filter
+                  className="w-full"
+                />
+              )}
             </div>
           </div>
 
@@ -461,10 +609,8 @@ export function Calculator() {
                           {listing.title}
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400">
-                          {listing.classifiedDetails.brand}{" "}
-                          {listing.classifiedDetails.model} •{" "}
-                          {listing.classifiedDetails.year} •{" "}
-                          {listing.classifiedDetails.mileage} km •{" "}
+                          {listing.detail.brand} {listing.detail.model} •{" "}
+                          {listing.detail.year} • {listing.detail.mileage} km •{" "}
                           {listing.location}
                         </div>
                       </div>
@@ -497,11 +643,20 @@ export function Calculator() {
         )}
 
         {/* Fiyat Sonuç Alanı */}
-        {/* {priceResult && showResults && (
+        {priceResult && (
           <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-              Fiyat Karşılaştırması
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                Fiyat Karşılaştırması
+              </h2>
+
+              <Button
+                label="Kar Hesapla"
+                icon="pi pi-external-link"
+                onClick={() => setVisible(true)}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+              />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700">
@@ -509,12 +664,7 @@ export function Calculator() {
                   Sahibinden Ortalama
                 </h3>
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {new Intl.NumberFormat("tr-TR", {
-                    style: "currency",
-                    currency: "TRY",
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  }).format(priceResult.sahibindenAverage)}
+                  {formatCurrency(averages.marketAveragePrice)}
                 </div>
                 <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
                   {listings.length} ilan ortalaması
@@ -526,12 +676,7 @@ export function Calculator() {
                   Algoritma Fiyatı
                 </h3>
                 <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  {new Intl.NumberFormat("tr-TR", {
-                    style: "currency",
-                    currency: "TRY",
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  }).format(priceResult.algorithmResult)}
+                  {formatCurrency(averages.algorithmAveragePrice)}
                 </div>
                 <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
                   Sistem hesaplaması
@@ -543,12 +688,7 @@ export function Calculator() {
                   Genel Ortalama
                 </h3>
                 <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {new Intl.NumberFormat("tr-TR", {
-                    style: "currency",
-                    currency: "TRY",
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0,
-                  }).format(priceResult.finalResult)}
+                  {formatCurrency(averages.generalAveragePrice)}
                 </div>
                 <p className="text-sm text-green-600 dark:text-green-400 mt-1">
                   Önerilen fiyat
@@ -557,14 +697,15 @@ export function Calculator() {
             </div>
 
             <div className="mt-4 text-center text-gray-500 dark:text-gray-400 text-sm">
-              Fiyatlar {selectedBrand} {selectedModel} {selectedSubModel} modeli
-              için hesaplanmıştır
+              Fiyatlar {brands.find((x) => x.id === selectedBrandId)?.name}{" "}
+              {models.find((x) => x.id === selectedModelId)?.name} modeli için
+              hesaplanmıştır
             </div>
           </div>
-        )} */}
+        )}
 
         {/* Tramer/Hasar Bilgileri */}
-        {/* {showResults && (
+        {showResult && (
           <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
               Tramer/Hasar Bilgileri
@@ -590,11 +731,11 @@ export function Calculator() {
                       {partNames[key] || key}
                     </label>
                     <select
-                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={value.status}
                       onChange={(e) =>
                         handleDamageStatusChange(key, e.target.value)
                       }
+                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="Orijinal">Orijinal</option>
                       <option value="Boyalı">Boyalı</option>
@@ -606,7 +747,7 @@ export function Calculator() {
               })}
             </div>
           </div>
-        )} */}
+        )}
 
         {/* Sonuç Yoksa */}
         {showResult && listings.length === 0 && (
@@ -660,34 +801,30 @@ export function Calculator() {
 
                 <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300 mb-6">
                   <div>
-                    <strong>Marka:</strong>{" "}
-                    {modalListing.classifiedDetails.brand}
+                    <strong>Marka:</strong> {modalListing.detail.brand}
                   </div>
                   <div>
-                    <strong>Model:</strong>{" "}
-                    {modalListing.classifiedDetails.model}
+                    <strong>Model:</strong> {modalListing.detail.model}
                   </div>
                   <div>
-                    <strong>Yıl:</strong> {modalListing.classifiedDetails.year}
+                    <strong>Yıl:</strong> {modalListing.detail.year}
                   </div>
                   <div>
-                    <strong>Kilometre:</strong>{" "}
-                    {modalListing.classifiedDetails.mileage} km
+                    <strong>Kilometre:</strong> {modalListing.detail.mileage} km
                   </div>
                   <div>
-                    <strong>Durum:</strong>{" "}
-                    {modalListing.classifiedDetails.condition}
+                    <strong>Durum:</strong> {modalListing.detail.condition}
                   </div>
                   <div>
                     <strong>Motor Hacmi:</strong>{" "}
-                    {modalListing.classifiedDetails.engineCapacity}
+                    {modalListing.detail.engineCapacity}
                   </div>
                   <div>
                     <strong>Motor Gücü:</strong>{" "}
-                    {modalListing.classifiedDetails.enginePower}
+                    {modalListing.detail.enginePower}
                   </div>
                   <div>
-                    <strong>Tip:</strong> {modalListing.classifiedDetails.type}
+                    <strong>Tip:</strong> {modalListing.detail.type}
                   </div>
                   <div>
                     <strong>Konum:</strong> {modalListing.location}
@@ -697,13 +834,13 @@ export function Calculator() {
                   </div>
                 </div>
 
-                {modalListing.classifiedDetails.securityFeatures.length > 0 && (
+                {modalListing.detail.securityFeatures.length > 0 && (
                   <div className="mb-4">
                     <h4 className="font-medium text-gray-900 dark:text-white mb-2">
                       Güvenlik Özellikleri
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {modalListing.classifiedDetails.securityFeatures.map(
+                      {modalListing.detail.securityFeatures.map(
                         (feature, index) => (
                           <span
                             key={index}
@@ -717,13 +854,13 @@ export function Calculator() {
                   </div>
                 )}
 
-                {modalListing.classifiedDetails.accessories.length > 0 && (
+                {modalListing.detail.accessories.length > 0 && (
                   <div className="mb-6">
                     <h4 className="font-medium text-gray-900 dark:text-white mb-2">
                       Aksesuarlar
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {modalListing.classifiedDetails.accessories.map(
+                      {modalListing.detail.accessories.map(
                         (accessory, index) => (
                           <span
                             key={index}
@@ -751,6 +888,86 @@ export function Calculator() {
           </div>
         )}
       </div>
+      <Dialog
+        draggable={false}
+        header="Kar Hesaplaması"
+        visible={visible}
+        style={{ width: "50vw" }}
+        onHide={() => {
+          if (!visible) return;
+          setVisible(false);
+        }}
+        footer={footerContent}
+        className="p-0"
+      >
+        <div className="p-6 space-y-4">
+          {/* Yüzdelik Girişi */}
+          <div>
+            <label
+              htmlFor="percent"
+              className="block text-sm font-medium text-white-700 dark:text-white-300 mb-2"
+            >
+              Yüzdelik (%)
+            </label>
+            <InputNumber
+              inputId="percent"
+              value={percentage}
+              onValueChange={(e) => setPercentage(e.value || 0)}
+              prefix="%"
+              className="w-full"
+              inputClassName="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            />
+          </div>
+
+          {/* Hesaplanan Fiyatlar */}
+          {calculatedPrices && (
+            <div className="mt-6 space-y-4">
+              <h3 className="text-lg font-semibold text-white-800 dark:text-white-200">
+                Hesaplanan Fiyatlar
+              </h3>
+
+              {/* Açıklama */}
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Girilen yüzdelik değer doğrultusunda her ortalama fiyat,
+                belirtilen oranda kâr edecek şekilde geriye dönük olarak
+                hesaplanmıştır. Bu sayede ürününüzün, belirlediğiniz kâr marjı
+                ile satıldığında hangi maliyetlerle alınması gerektiğini
+                görebilirsiniz.
+              </p>
+
+              {/* Fiyat Kartları */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700">
+                  <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">
+                    Sahibinden Ortalama
+                  </h3>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {formatCurrency(calculatedPrices.market)}
+                  </div>
+                </div>
+
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 text-center border border-orange-200 dark:border-orange-700">
+                  <h3 className="text-lg font-medium text-orange-700 dark:text-orange-300 mb-2">
+                    Algoritma Ortalama
+                  </h3>
+                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {formatCurrency(calculatedPrices.algorithm)}
+                  </div>
+                </div>
+
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center border-2 border-green-500">
+                  <h3 className="text-lg font-medium text-green-700 dark:text-green-300 mb-2">
+                    Genel Ortalama
+                  </h3>
+                  <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    {formatCurrency(calculatedPrices.general)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </Dialog>
     </div>
   );
 }

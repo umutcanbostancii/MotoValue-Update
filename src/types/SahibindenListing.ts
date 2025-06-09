@@ -6,7 +6,7 @@ export interface SahibindenListing {
   location: string;
   image: string;
   link: string;
-  classifiedDetails: {
+  detail: {
     brand: string;
     model: string;
     year: string;
