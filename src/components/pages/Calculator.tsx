@@ -90,18 +90,24 @@ export function Calculator() {
   const [condition, setCondition] = useState<string>("");
 
   const [damageStatus, setDamageStatus] = useState<DamageStatus>({
-    chassis: { status: "Orijinal" },
-    engine: { status: "Orijinal" },
-    transmission: { status: "Orijinal" },
-    frontFork: { status: "Orijinal" },
-    fuelTank: { status: "Orijinal" },
-    electrical: { status: "Orijinal" },
-    frontPanel: { status: "Orijinal" },
-    rearPanel: { status: "Orijinal" },
-    exhaust: { status: "Orijinal" },
+    chassis: { status: "1" },
+    engine: { status: "1" },
+    transmission: { status: "1" },
+    frontFork: { status: "1" },
+    fuelTank: { status: "1" },
+    electrical: { status: "1" },
+    frontPanel: { status: "1" },
+    rearPanel: { status: "1" },
+    exhaust: { status: "1" },
   });
 
   const [percentage, setPercentage] = useState(0);
+
+  const [initalAverages, setInitialAverages] = useState({
+    marketAveragePrice: 0,
+    algorithmAveragePrice: 0,
+    generalAveragePrice: 0,
+  });
 
   const [averages, setAverages] = useState({
     marketAveragePrice: 0,
@@ -135,6 +141,7 @@ export function Calculator() {
 
       setListings(datas);
       const calculatedAverages = calculatePriceAverages(datas);
+      setInitialAverages(calculatedAverages);
       setAverages(calculatedAverages);
       setShowResult(true);
       setPriceResult(true);
@@ -145,9 +152,9 @@ export function Calculator() {
       setShowResult(false);
       setPriceResult(false);
       MySwal.fire({
-        title: "Hata",
+        title: "Uyarı",
         text: error,
-        icon: "error",
+        icon: "warning",
         confirmButtonText: "Tamam",
       });
     };
@@ -219,6 +226,29 @@ export function Calculator() {
   };
 
   const clearSelection = () => {
+    setAverages({
+      marketAveragePrice: 0,
+      algorithmAveragePrice: 0,
+      generalAveragePrice: 0,
+    });
+    setInitialAverages({
+      marketAveragePrice: 0,
+      algorithmAveragePrice: 0,
+      generalAveragePrice: 0,
+    });
+    setDamageStatus({
+      chassis: { status: "1" },
+      engine: { status: "1" },
+      transmission: { status: "1" },
+      frontFork: { status: "1" },
+      fuelTank: { status: "1" },
+      electrical: { status: "1" },
+      frontPanel: { status: "1" },
+      rearPanel: { status: "1" },
+      exhaust: { status: "1" },
+    });
+    setShowResult(false);
+    setPriceResult(false);
     setSelectedBrandId(null);
     setSelectedModelId(null);
     setYearRange("");
@@ -298,7 +328,48 @@ export function Calculator() {
       ...prev,
       [key]: { status: value },
     }));
-    console.log("Damage status changed:", key, value);
+  };
+
+  const calculateDamageStatus = () => {
+    const multipliers: Record<string, number> = {
+      "1": 1,
+      "2": 0.95,
+      "3": 0.9,
+      "4": 0.85,
+      "5": 0.8,
+    };
+
+    const partEffects: Record<string, number> = {
+      chassis: 0.2,
+      engine: 0.25,
+      transmission: 0.15,
+      frontFork: 0.1,
+      fuelTank: 0.05,
+      electrical: 0.1,
+      frontPanel: 0.05,
+      rearPanel: 0.05,
+      exhaust: 0.05,
+    };
+
+    let totalEffect = 0;
+
+    Object.keys(damageStatus).forEach((part) => {
+      const status = damageStatus[part].status;
+      const multiplier = multipliers[status] ?? 1;
+      const effect = partEffects[part] ?? 0;
+
+      totalEffect += effect * multiplier;
+    });
+
+    const newAlgorithmPrice =
+      initalAverages.algorithmAveragePrice * totalEffect;
+    const newGeneralPrice = initalAverages.generalAveragePrice * totalEffect;
+
+    setAverages((prev) => ({
+      ...prev,
+      algorithmAveragePrice: newAlgorithmPrice,
+      generalAveragePrice: newGeneralPrice,
+    }));
   };
 
   const handleCalculateProfit = () => {
@@ -737,14 +808,24 @@ export function Calculator() {
                       }
                       className="w-full rounded-md border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="Orijinal">Orijinal</option>
-                      <option value="Boyalı">Boyalı</option>
-                      <option value="Değişen">Değişen</option>
-                      <option value="Hasarlı">Hasarlı</option>
+                      <option value="1">Mükemmel</option>
+                      <option value="2">İyi</option>
+                      <option value="3">Orta</option>
+                      <option value="4">Kötü</option>
+                      <option value="5">Hasarlı</option>
                     </select>
                   </div>
                 );
               })}
+            </div>
+
+            <div className="flex items-center justify-center mt-5">
+              <Button
+                label="Tramerli Fiyat Hesapla"
+                icon="pi pi-calculator"
+                onClick={calculateDamageStatus}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+              />
             </div>
           </div>
         )}
@@ -893,10 +974,7 @@ export function Calculator() {
         header="Kar Hesaplaması"
         visible={visible}
         style={{ width: "50vw" }}
-        onHide={() => {
-          if (!visible) return;
-          setVisible(false);
-        }}
+        onHide={handleClose}
         footer={footerContent}
         className="p-0"
       >
