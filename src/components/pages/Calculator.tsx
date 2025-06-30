@@ -115,6 +115,7 @@ export function Calculator() {
       const calculatedMarketPrice = calculateMarketPriceAverage(listings);
       if (allKmBetween0And1000) {
         console.log(brandNewAverages);
+        console.log(brandNewAverages);
         setInitialBrandNewAverages(calculatedMarketPrice);
         setBrandNewAverages(calculatedMarketPrice);
         setSahibindenLoading(false);
