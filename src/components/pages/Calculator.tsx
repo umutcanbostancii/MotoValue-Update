@@ -82,7 +82,6 @@ export function Calculator() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [stepBackIndex, setStepBackIndex] = useState(0);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [brandNewAverages, setBrandNewAverages] = useState<number>(0);
   const [initialBrandNewAverages, setInitialBrandNewAverages] =
     useState<number>(0);
@@ -115,6 +114,7 @@ export function Calculator() {
       });
       const calculatedMarketPrice = calculateMarketPriceAverage(listings);
       if (allKmBetween0And1000) {
+        console.log(brandNewAverages);
         setInitialBrandNewAverages(calculatedMarketPrice);
         setBrandNewAverages(calculatedMarketPrice);
         setSahibindenLoading(false);
