@@ -1,8 +1,8 @@
-import { RouterProvider } from 'react-router-dom';
-import { router } from './lib/routes';
-import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { Toaster } from 'react-hot-toast';
+import { RouterProvider } from "react-router-dom";
+import { router } from "./lib/routes";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (

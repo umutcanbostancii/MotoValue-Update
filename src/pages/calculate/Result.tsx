@@ -360,7 +360,7 @@ export default function CalculationResultPage() {
             <div>
               <div className="text-gray-400 text-sm">Kategori</div>
               <div className="text-white">{result.motorcycle_details?.category}</div>
-            </div>
+              </div>
             <div>
               <div className="text-gray-400 text-sm">Motor Hacmi</div>
               <div className="text-white">{result.motorcycle_details?.engine_cc} cc</div>
@@ -368,7 +368,7 @@ export default function CalculationResultPage() {
             <div>
               <div className="text-gray-400 text-sm">Kilometre</div>
               <div className="text-white">{mileage} km</div>
-            </div>
+              </div>
             <div>
               <div className="text-gray-400 text-sm">Durum</div>
               <div className="text-white">{condition}</div>

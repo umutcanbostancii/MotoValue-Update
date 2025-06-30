@@ -1,709 +1,973 @@
-import { useState, useEffect } from 'react';
-import { Calculator as CalcIcon } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import {
+  CalculatorIcon,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  ExternalLink,
+  Home,
+  Search,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Brand } from "../../types/Brand";
+import { Model } from "../../types/Model";
+import { useSignalR } from "../../SignalR/SignalRContext";
+import { Dropdown } from "primereact/dropdown";
+import { DamageStatus } from "../../types/DamageStatus";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
+import { InputNumber } from "primereact/inputnumber";
+import { Listing } from "../../types/Listing";
+import { Steps } from "primereact/steps";
+const API_URL = import.meta.env.VITE_API_URL;
 
-interface TechnicalFeatures {
-  abs: boolean;
-  airbag: boolean;
-  alarm: boolean;
-  immobilizer: boolean;
-  traction_control: boolean;
-  cbs: boolean;
-  quick_shifter: boolean;
-  side_protection: boolean;
-  front_protection: boolean;
-}
-
-interface Accessories {
-  heated_grips: boolean;
-  rear_carrier: boolean;
-  luggage_system: boolean;
-  carbon: boolean;
-  nos: boolean;
-  led_stop: boolean;
-  xenon: boolean;
-  gps: boolean;
-  led_signals: boolean;
-  sound_system: boolean;
-  front_camera: boolean;
-  double_stand: boolean;
-}
-
-interface DamageStatus {
-  [key: string]: { status: string };
-}
+const MySwal = withReactContent(Swal);
 
 export function Calculator() {
-  // Temel bilgiler state'leri
-  const [brands, setBrands] = useState<string[]>([]);
-  const [models, setModels] = useState<string[]>([]);
-  const [selectedBrand, setSelectedBrand] = useState('');
-  const [selectedModel, setSelectedModel] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedYear, setSelectedYear] = useState('');
-  const [mileage, setMileage] = useState('');
-  const [condition, setCondition] = useState('');
+  const conditionOptions = [
+    { label: "İkinci El", value: "İkinci El" },
+    { label: "Yurtdışından İthal Sıfır", value: "Yurtdışından İthal Sıfır" },
+    { label: "Yetkili Bayiden Sıfır", value: "Yetkili Bayiden Sıfır" },
+  ];
+  const currentYear = new Date().getFullYear();
 
-  // Teknik özellikler state'leri
-  const [enginePower, setEnginePower] = useState('');
-  const [engineCC, setEngineCC] = useState('');
-  const [timingType, setTimingType] = useState('');
-  const [cylinderCount, setCylinderCount] = useState('');
-  const [transmission, setTransmission] = useState('');
-  const [cooling, setCooling] = useState('');
-  const [color, setColor] = useState('');
-  const [origin, setOrigin] = useState('');
-  const [tradeable, setTradeable] = useState(false);
-
-  // Güvenlik özellikleri state'i
-  const [technicalFeatures, setTechnicalFeatures] = useState<TechnicalFeatures>({
-    abs: false,
-    airbag: false,
-    alarm: false,
-    immobilizer: false,
-    traction_control: false,
-    cbs: false,
-    quick_shifter: false,
-    side_protection: false,
-    front_protection: false,
-  });
-
-  // Aksesuar state'i
-  const [accessories, setAccessories] = useState<Accessories>({
-    heated_grips: false,
-    rear_carrier: false,
-    luggage_system: false,
-    carbon: false,
-    nos: false,
-    led_stop: false,
-    xenon: false,
-    gps: false,
-    led_signals: false,
-    sound_system: false,
-    front_camera: false,
-    double_stand: false,
-  });
-
-  // Hasar/Tramer durumu state'i
-  const [damageStatus, setDamageStatus] = useState<DamageStatus>({
-    chassis: { status: 'Orijinal' },
-    engine: { status: 'Orijinal' },
-    transmission: { status: 'Orijinal' },
-    frontFork: { status: 'Orijinal' },
-    fuelTank: { status: 'Orijinal' },
-    electrical: { status: 'Orijinal' },
-    frontPanel: { status: 'Orijinal' },
-    rearPanel: { status: 'Orijinal' },
-    exhaust: { status: 'Orijinal' },
-  });
+  const { connection } = useSignalR();
 
   const [loading, setLoading] = useState(true);
-  const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
-  const navigate = useNavigate();
+  const [sahibindenLoading, setSahibindenLoading] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [showOnlySahibindenPriceCard, setShowOnlySahibindenPriceCard] =
+    useState(false);
+  const [showSimpleList, setShowSimpleList] = useState(true);
+  const [showResult, setShowResult] = useState(false);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+  const [minYear, setMinYear] = useState<number | null>(null);
+  const [maxYear, setMaxYear] = useState<number | null>(null);
+  const [minMilage, setMinMilage] = useState<number | null>(null);
+  const [maxMilage, setMaxMilage] = useState<number | null>(null);
+
+  const [condition, setCondition] = useState<string>("İkinci El");
+
+  const [damageStatus, setDamageStatus] = useState<DamageStatus>({
+    headFairing: { status: "1" },
+    bottomFairing: { status: "1" },
+    leftFairing: { status: "1" },
+    rightFairing: { status: "1" },
+    backFairing: { status: "1" },
+    fuelTank: { status: "1" },
+  });
+
+  const stepperItems = [
+    {
+      label: "Motosiklet Seçimi",
+    },
+    {
+      label: "Sahibinden Bilgisi",
+    },
+    {
+      label: "Hasar Bilgisi",
+    },
+    {
+      label: "Değerleme",
+    },
+  ];
+
+  const [percentage, setPercentage] = useState(0);
+  const [listingsLength, setListingsLength] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [stepBackIndex, setStepBackIndex] = useState(0);
+
+  const [brandNewAverages, setBrandNewAverages] = useState<number>(0);
+  const [initialBrandNewAverages, setInitialBrandNewAverages] =
+    useState<number>(0);
+  const [calculatedBrandNewAverages, setCalculatedBrandNewAverages] =
+    useState<number>(0);
+
+  const [averages, setAverages] = useState({
+    marketAveragePrice: 0,
+    algorithmAveragePrice: 0,
+    generalAveragePrice: 0,
+  });
+
+  const [calculatedPrices, setCalculatedPrices] = useState<{
+    market: number;
+    algorithm: number;
+    general: number;
+  } | null>(null);
 
   useEffect(() => {
-    fetchMotorcycles();
+    fetchBrands();
   }, []);
 
-  const fetchMotorcycles = async () => {
-    try {
-      setLoading(true);
-      console.log('🔍 Fetching motorcycles...');
+  useEffect(() => {
+    if (!connection) return;
 
-      const { data, error: fetchError } = await supabase
-        .from('motorcycles')
-        .select('*')
-        .order('brand', { ascending: true });
-
-      console.log('📊 Supabase response:', { data, error: fetchError });
-
-      if (fetchError) {
-        console.error('❌ Supabase error:', fetchError);
-        throw new Error(fetchError.message);
+    const handleListings = (listings: Listing[]) => {
+      const allKmBetween0And1000 = listings.every((listing) => {
+        const km = parseInt(listing.km.replace(/\D/g, ""), 10);
+        return km >= 0 && km <= 1000;
+      });
+      const calculatedMarketPrice = calculateMarketPriceAverage(listings);
+      if (allKmBetween0And1000) {
+        console.log(brandNewAverages);
+        console.log(brandNewAverages);
+        setInitialBrandNewAverages(calculatedMarketPrice);
+        setBrandNewAverages(calculatedMarketPrice);
+        setSahibindenLoading(false);
+        setStepBackIndex(2);
+      } else {
+        setListings(listings);
+        setListingsLength(listings.length);
+        setAverages((prev) => ({
+          ...prev,
+          marketAveragePrice: calculatedMarketPrice,
+        }));
+        setSahibindenLoading(false);
+        setStepBackIndex(1);
       }
 
-      if (!data) {
-        console.error('❌ No data returned from Supabase');
-        throw new Error('No data returned from Supabase');
-      }
+      nextStep();
+    };
 
-      console.log('✅ Data received:', data.length, 'motorcycles');
-      console.log('📋 Sample data:', data.slice(0, 3));
+    const handleError = (error: string) => {
+      setSahibindenLoading(false);
+      setShowResult(false);
+      MySwal.fire({
+        title: "Uyarı",
+        text: error,
+        icon: "warning",
+        confirmButtonText: "Tamam",
+      });
+    };
 
-      const uniqueBrands = Array.from(new Set(data.map(m => m.brand))).sort();
-      console.log('🏷️ Unique brands:', uniqueBrands);
-      setBrands(uniqueBrands);
+    connection.on("ReceiveListings", handleListings);
+    connection.on("ReceiveScrapeError", handleError);
 
-    } catch (err) {
-      console.error('💥 Error details:', err);
-      toast.error(err instanceof Error ? err.message : 'Veri yüklenirken bir hata oluştu');
-    } finally {
-      setLoading(false);
-    }
+    return () => {
+      connection.off("ReceiveListings", handleListings);
+      connection.off("ReceiveScrapeError", handleError);
+    };
+  }, [connection]);
+
+  const fetchBrands = async () => {
+    fetch(`${API_URL}GeneralAPI/getmotorbrands`)
+      .then((response) => response.json())
+      .then((data) => {
+        setBrands(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Markalar yüklenirken hata oluştu:", error);
+        setLoading(false);
+      });
   };
 
-  const handleBrandChange = async (brand: string) => {
-    console.log('🏷️ Brand selected:', brand);
-    setSelectedBrand(brand);
-    setSelectedModel('');
-    
-    if (!brand) {
-      console.log('❌ No brand selected, clearing models');
-      setModels([]);
+  const fetchModels = async (brandId: number) => {
+    setLoading(true);
+    fetch(`${API_URL}GeneralAPI/getmotormodelsbyid?id=${brandId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setModels(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Modeller yüklenirken hata oluştu:", error);
+        setLoading(false);
+      });
+  };
+
+  const handleBrandSelect = async (brandId: number) => {
+    setSelectedBrandId(brandId);
+    await fetchModels(brandId);
+  };
+
+  const handleModelSelect = (modelId: number) => {
+    setSelectedModelId(modelId);
+  };
+
+  const getDataFromSahibinden = async (isUsed: boolean) => {
+    if (!connection) {
+      console.error("SignalR bağlantısı kurulmadı!");
       return;
     }
-    
-    console.log('🔍 Fetching models for brand:', brand);
-    const { data, error } = await supabase
-      .from('motorcycles')
-      .select('model')
-      .eq('brand', brand)
-      .order('model', { ascending: true });
 
-    console.log('📊 Models response:', { data, error });
-
-    if (data) {
-      const uniqueModels = Array.from(new Set(data.map((m: { model: string }) => m.model))).sort();
-      console.log('🏍️ Unique models:', uniqueModels);
-      setModels(uniqueModels);
-    } else {
-      console.log('❌ No models found for brand:', brand);
-      setModels([]);
-    }
-  };
-
-  const handleModelChange = (model: string) => {
-    setSelectedModel(model);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
     try {
-      await handleCalculate();
-      
-      // Geçici olarak navigation'ı devre dışı bırakıyoruz
-      // // Motosiklet ID'sini al
-      // const { data: motorcycleData } = await supabase
-      //   .from('motorcycles')
-      //   .select('id')
-      //   .eq('brand', selectedBrand)
-      //   .eq('model', selectedModel)
-      //   .eq('year', parseInt(selectedYear, 10))
-      //   .single();
-      
-      // if (motorcycleData?.id) {
-      //   // Detaylı sonuç sayfasına yönlendir
-      //   navigate(`/dashboard/calculate/result?id=${motorcycleData.id}&mileage=${mileage}&condition=${condition}&damageStatus=${encodeURIComponent(JSON.stringify(damageStatus))}`);
-      // }
+      setSahibindenLoading(true);
+      await connection.invoke(
+        "RequestScrape",
+        selectedBrandId,
+        selectedModelId,
+        minYear,
+        maxYear,
+        `${minMilage}-${maxMilage}`,
+        condition,
+        isUsed
+      );
     } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
+      console.error("SignalR isteği hatası:", error);
     }
+  };
+
+  const clearSelection = () => {
+    setAverages({
+      marketAveragePrice: 0,
+      algorithmAveragePrice: 0,
+      generalAveragePrice: 0,
+    });
+    setDamageStatus({
+      headFairing: { status: "1" },
+      bottomFairing: { status: "1" },
+      sideFairing: { status: "1" },
+      backFairing: { status: "1" },
+      fuelTank: { status: "1" },
+    });
+    setShowResult(false);
+    setSelectedBrandId(null);
+    setSelectedModelId(null);
+    setMinMilage(0);
+    setMaxMilage(0);
+    setMinYear(0);
+    setMaxYear(0);
+    setCondition("");
+    setListings([]);
+    setShowSimpleList(false);
+  };
+
+  const calculateMarketPriceAverage = (listings: Listing[]) => {
+    const marketAverage =
+      listings.reduce((sum, item) => {
+        const price = parseFloat(item.price.replace(/[^0-9]/g, ""));
+        return sum + price;
+      }, 0) / listings.length;
+
+    return marketAverage;
   };
 
   const handleDamageStatusChange = (key: string, value: string) => {
-    setDamageStatus(prev => ({
+    setDamageStatus((prev) => ({
       ...prev,
-      [key]: { status: value }
+      [key]: { status: value },
     }));
   };
 
-  const handleCalculate = async () => {
-    try {
-      // Gerekli alanların kontrolü
-      if (!selectedBrand || !selectedModel || !selectedYear || !mileage || !condition) {
-        toast.error('Lütfen gerekli alanları doldurunuz');
-        return;
-      }
+  const calculateDamageStatus = () => {
+    const multipliers: Record<string, number> = {
+      "1": 0,
+      "2": 0.05,
+      "3": 0.1,
+      "4": 0.75,
+      "5": 0.78,
+      "6": 0.95,
+    };
 
-      // Yıl değerini kontrol et
-      const yearValue = parseInt(selectedYear, 10);
-      if (isNaN(yearValue) || yearValue <= 0) {
-        toast.error('Geçerli bir yıl değeri giriniz');
-        return;
-      }
+    const partEffects: Record<string, number> = {
+      headFairing: 0.04,
+      bottomFairing: 0.0125,
+      leftFairing: 0.0175,
+      rightFairing: 0.0175,
+      backFairing: 0.0125,
+      fuelTank: 0.05,
+    };
 
-      // Geçici olarak kullanıcı kontrolünü bypass ediyoruz
-      // const userResponse = await supabase.auth.getUser();
-      // if (userResponse.error) {
-      //   toast.error('Kullanıcı bilgisi alınamadı');
-      //   return;
-      // }
+    const currentYear = new Date().getFullYear();
+    const safeMaxYear = maxYear ?? currentYear;
+    const safeMinYear = minYear ?? currentYear;
+    const yearEffect =
+      (100 - (currentYear - (safeMaxYear + safeMinYear) / 2) * 5) / 100;
 
-      // const user = userResponse.data.user;
-      // if (!user) {
-      //   toast.error('Lütfen giriş yapınız');
-      //   return;
-      // }
+    let totalEffect = 0;
 
-      // Test için dummy user ID
-      const dummyUserId = 'test-user-id';
+    Object.keys(damageStatus).forEach((part) => {
+      const status = damageStatus[part].status;
 
-      // 1. Önce motosiklet ID'sini bul - yıl kontrolü olmadan
-      console.log('🔍 Searching motorcycle:', { selectedBrand, selectedModel, yearValue });
-      
-      let { data: motorcycleData, error: motorcycleError } = await supabase
-        .from('motorcycles')
-        .select('id, brand, model, year, price')
-        .eq('brand', selectedBrand)
-        .eq('model', selectedModel)
-        .limit(1)
-        .single();
+      const multiplier = multipliers[status] ?? 1;
+      const effect = partEffects[part] ?? 0;
 
-      console.log('🏍️ Motorcycle search result:', { motorcycleData, motorcycleError });
+      totalEffect += effect * multiplier;
+    });
 
-      if (motorcycleError || !motorcycleData) {
-        console.error('❌ Motorcycle not found, trying alternative search...');
-        
-        // Alternatif arama: model adında kısmi eşleşme
-        const { data: alternativeData, error: alternativeError } = await supabase
-          .from('motorcycles')
-          .select('id, brand, model, year, price')
-          .eq('brand', selectedBrand)
-          .ilike('model', `%${selectedModel}%`)
-          .limit(1)
-          .single();
-          
-        console.log('🔄 Alternative search result:', { alternativeData, alternativeError });
-        
-        if (alternativeError || !alternativeData) {
-          toast.error(`Motosiklet bilgisi bulunamadı: ${selectedBrand} ${selectedModel}`);
-          return;
-        }
-        
-        motorcycleData = alternativeData;
-      }
+    const calculatedBrandNewPrice = (1 - totalEffect) * initialBrandNewAverages;
+    const finalBrandNewPrice = calculatedBrandNewPrice * yearEffect;
 
-      const motorcycleId = motorcycleData.id;
-      console.log('✅ Using motorcycle ID:', motorcycleId);
+    const generalAveragePrice =
+      (averages.marketAveragePrice + finalBrandNewPrice) / 2;
 
-      // 2. RPC fonksiyonunu çağır
-      console.log('Gönderilen damageStatus:', damageStatus);
-      
-      const { data: calculationData, error: calculationError } = await supabase
-        .rpc('calculate_motorcycle_price', {
-          input_motorcycle_id: motorcycleId,
-          input_mileage: parseInt(mileage, 10),
-          input_condition: condition,
-          input_damage_status: damageStatus
-        });
+    setCalculatedBrandNewAverages(finalBrandNewPrice);
+    setAverages((prev) => ({
+      ...prev,
+      generalAveragePrice: generalAveragePrice,
+    }));
+    setStepBackIndex(3);
+    nextStep();
+  };
 
-      if (calculationError) {
-        console.error('RPC error details:', calculationError);
-        throw new Error(calculationError.message);
-      }
+  const handleCalculateProfit = () => {
+    const factor = (100 + percentage) / 100;
 
-      if (!calculationData) {
-        throw new Error('Hesaplama yapılamadı');
-      }
+    setCalculatedPrices({
+      market: Number((averages.marketAveragePrice / factor).toFixed(2)),
+      algorithm: Number((calculatedBrandNewAverages / factor).toFixed(2)),
+      general: Number((averages.generalAveragePrice / factor).toFixed(2)),
+    });
+  };
 
-      // 3. Sonucu price_calculations tablosuna kaydet (geçici olarak devre dışı)
-      // const calculationRecord = {
-      //   motorcycle_id: motorcycleId,
-      //   user_id: dummyUserId,
-      //   mileage: parseInt(mileage),
-      //   condition: condition,
-      //   calculated_price: calculationData.calculated_price,
-      //   technical_features: technicalFeatures,
-      //   accessories: accessories,
-      //   damage_status: damageStatus
-      // };
-
-      // const { error: insertError } = await supabase
-      //   .from('price_calculations')
-      //   .insert(calculationRecord);
-
-      // if (insertError) {
-      //   console.error('Kayıt hatası:', insertError);
-      //   // Kayıt hatası olsa bile hesaplanan fiyatı göster
-      // }
-
-      // Hesaplama sonucunu state'e kaydet
-      setCalculatedPrice(calculationData.calculated_price);
-      
-      // Başarı mesajı göster
-      toast.success(`Hesaplanan Fiyat: ${new Intl.NumberFormat('tr-TR', {
-        style: 'currency',
-        currency: 'TRY'
-      }).format(calculationData.calculated_price)}`);
-
-    } catch (error: any) {
-      if (error.message === 'Timeout') {
-        toast.error('İşlem zaman aşımına uğradı, lütfen tekrar deneyiniz');
-      } else {
-        console.error('Hesaplama hatası:', error);
-        toast.error(error.message || 'Fiyat hesaplanırken bir hata oluştu');
-      }
-      throw error;
+  const profitCalculationModalType = () => {
+    if (activeIndex === 1) {
+      setShowOnlySahibindenPriceCard(true);
+    } else {
+      setShowOnlySahibindenPriceCard(false);
     }
+
+    setVisible(true);
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: "TRY",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const handleClose = () => {
+    setVisible(false);
+    setPercentage(0);
+    setCalculatedPrices(null);
+  };
+
+  const footerContent = (
+    <div className="flex justify-end gap-2 px-4 py-2">
+      <Button
+        label="Hesapla"
+        icon="pi pi-check"
+        onClick={handleCalculateProfit}
+        autoFocus
+        className="bg-blue-600 text-white hover:bg-blue-700 font-medium py-2 px-4 rounded flex items-center gap-2"
+      />
+      <Button
+        label="Kapat"
+        icon="pi pi-times"
+        onClick={handleClose}
+        className="bg-red-600 text-white hover:bg-red-700 font-medium py-2 px-4 rounded flex items-center gap-2"
+      />
+    </div>
+  );
+
+  const nextStep = () => {
+    if (activeIndex < stepperItems.length - 1) {
+      setActiveIndex((prev) => prev + 1);
+    }
+  };
+
+  const onStepSelect = (stepIndex: number) => {
+    if (stepIndex > stepBackIndex) {
+      return;
+    }
+
+    setActiveIndex(stepIndex);
   };
 
   return (
     <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-8">
-          <CalcIcon className="h-6 w-6 inline-block mr-2" />
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Breadcrumb Navigation */}
+        <div className="bg-gray-50 dark:bg-gray-800/30 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+            <Home className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" />
+            <span>Fiyat Hesapla</span>
+            {selectedBrandId && (
+              <>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-gray-900 dark:text-white font-medium">
+                  {brands.find((brand) => brand.id === selectedBrandId)?.name ||
+                    "Marka Seçin"}
+                </span>
+              </>
+            )}
+            {selectedModelId && (
+              <>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-gray-900 dark:text-white font-medium">
+                  {models.find((model) => model.id === selectedModelId)?.name ||
+                    "Model Seçin"}
+                </span>
+              </>
+            )}
+            {(condition ||
+              (minMilage && minMilage !== 0) ||
+              (maxMilage && maxMilage !== 0) ||
+              minYear ||
+              maxYear) && (
+              <>
+                <ChevronRight className="h-4 w-4" />
+                <div className="flex items-center space-x-2">
+                  {condition && (
+                    <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 px-2 py-1 rounded text-xs">
+                      {condition}
+                    </span>
+                  )}
+                  {minMilage && maxMilage && (
+                    <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 px-2 py-1 rounded text-xs">
+                      {`${minMilage}-${maxMilage}`}
+                    </span>
+                  )}
+                  {minYear && maxYear && (
+                    <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300 px-2 py-1 rounded text-xs">
+                      {`${minYear}-${maxYear}`}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
+          <CalculatorIcon className="h-6 w-6 inline-block mr-2" />
           Fiyat Hesapla
         </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Temel Bilgiler */}
-          <div className="bg-gray-800/50 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Temel Bilgiler</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Marka</label>
-                <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={selectedBrand}
-                  onChange={(e) => handleBrandChange(e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="">{loading ? 'Yükleniyor...' : 'Seçiniz'}</option>
-                  {brands.map((b) => (
-                    <option key={b} value={b} className="text-white bg-gray-700">{b}</option>
-                  ))}
-                </select>
-                {loading && <div className="text-xs text-gray-400 mt-1">Markalar yükleniyor...</div>}
-                {!loading && brands.length === 0 && <div className="text-xs text-red-400 mt-1">Marka bulunamadı</div>}
-              </div>
+        {/* Marka/Model/Alt Model Seçimi */}
+        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+          <Steps
+            model={stepperItems}
+            activeIndex={activeIndex}
+            onSelect={(e) => onStepSelect(e.index)}
+            readOnly={false}
+          />
+          {activeIndex === 0 && (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-7">
+                {/* Markalar */}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Model</label>
-                <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={selectedModel}
-                  onChange={(e) => handleModelChange(e.target.value)}
-                  disabled={!selectedBrand}
-                >
-                  <option value="">{!selectedBrand ? 'Önce marka seçiniz' : 'Seçiniz'}</option>
-                  {models.map((m) => (
-                    <option key={m} value={m} className="text-white bg-gray-700">{m}</option>
-                  ))}
-                </select>
-                {selectedBrand && models.length === 0 && <div className="text-xs text-red-400 mt-1">Bu marka için model bulunamadı</div>}
-              </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Markalar
+                  </h3>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Kategori</label>
-                <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                >
-                  <option value="">Seçiniz</option>
-                  <option value="sport">Sport</option>
-                  <option value="naked">Naked</option>
-                  <option value="touring">Touring</option>
-                  <option value="cruiser">Cruiser</option>
-                  <option value="enduro">Enduro</option>
-                  <option value="scooter">Scooter</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Yıl</label>
-                <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                >
-                  <option value="">Seçiniz</option>
-                  {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                    <option key={year} value={year} className="text-white bg-gray-700">{year}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Kilometre</label>
-                <input
-                  type="number"
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={mileage}
-                  onChange={(e) => setMileage(e.target.value)}
-                  placeholder="Kilometre giriniz"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Durum</label>
-                <select 
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={condition}
-                  onChange={(e) => setCondition(e.target.value)}
-                >
-                  <option value="">Seçiniz</option>
-                  <option value="new">Sıfır</option>
-                  <option value="excellent">Mükemmel</option>
-                  <option value="good">İyi</option>
-                  <option value="fair">Orta</option>
-                  <option value="poor">Kötü</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Teknik Özellikler */}
-          <div className="bg-gray-800/50 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Teknik Özellikler</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Motor Gücü</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={enginePower}
-                  onChange={(e) => setEnginePower(e.target.value)}
-                >
-                  <option value="">101 - 125 hp</option>
-                  <option value="126-150">126 - 150 hp</option>
-                  <option value="151-175">151 - 175 hp</option>
-                  <option value="176-200">176 - 200 hp</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Motor Hacmi</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={engineCC}
-                  onChange={(e) => setEngineCC(e.target.value)}
-                >
-                  <option value="">251 - 350 cm³</option>
-                  <option value="351-500">351 - 500 cm³</option>
-                  <option value="501-750">501 - 750 cm³</option>
-                  <option value="751-1000">751 - 1000 cm³</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Zamanlama Tipi</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={timingType}
-                  onChange={(e) => setTimingType(e.target.value)}
-                >
-                  <option value="4-stroke">4 Zamanlı</option>
-                  <option value="2-stroke">2 Zamanlı</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Silindir Sayısı</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={cylinderCount}
-                  onChange={(e) => setCylinderCount(e.target.value)}
-                >
-                  <option value="single">Tek Silindir</option>
-                  <option value="twin">Çift Silindir</option>
-                  <option value="triple">Üç Silindir</option>
-                  <option value="four">Dört Silindir</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Vites</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={transmission}
-                  onChange={(e) => setTransmission(e.target.value)}
-                >
-                  <option value="manual">Manuel</option>
-                  <option value="automatic">Otomatik</option>
-                  <option value="semi">Yarı Otomatik</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Soğutma</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={cooling}
-                  onChange={(e) => setCooling(e.target.value)}
-                >
-                  <option value="air">Hava</option>
-                  <option value="liquid">Sıvı</option>
-                  <option value="oil">Yağ</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Renk</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                >
-                  <option value="black">Siyah</option>
-                  <option value="white">Beyaz</option>
-                  <option value="red">Kırmızı</option>
-                  <option value="blue">Mavi</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Menşei</label>
-                <select
-                  className="w-full bg-gray-700 border border-gray-600 text-white rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={origin}
-                  onChange={(e) => setOrigin(e.target.value)}
-                >
-                  <option value="japan">Japonya</option>
-                  <option value="germany">Almanya</option>
-                  <option value="italy">İtalya</option>
-                  <option value="usa">ABD</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={tradeable}
-                  onChange={(e) => setTradeable(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Takasa Açık</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Özellikler */}
-          <div className="bg-gray-800/50 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Özellikler</h2>
-            
-            {/* Güvenlik */}
-            <div className="mb-6">
-              <h3 className="text-md font-medium text-gray-300 mb-3">Güvenlik</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(technicalFeatures).map(([key, value]) => (
-                  <label key={key} className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={value}
-                      onChange={(e) => setTechnicalFeatures(prev => ({
-                        ...prev,
-                        [key]: e.target.checked
-                      }))}
-                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  {loading ? (
+                    <div className="text-gray-500 dark:text-gray-400">
+                      Yükleniyor...
+                    </div>
+                  ) : (
+                    <Dropdown
+                      onChange={(e) => handleBrandSelect(e.value.id)}
+                      value={
+                        brands.find((b) => b.id === selectedBrandId) || null
+                      }
+                      options={brands}
+                      optionLabel="name"
+                      placeholder="Marka Seçin"
+                      filter
+                      className="w-full"
                     />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                      {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
+                  )}
+                </div>
 
-            {/* Aksesuar */}
-            <div>
-              <h3 className="text-md font-medium text-gray-300 mb-3">Aksesuar</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(accessories).map(([key, value]) => (
-                  <label key={key} className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={value}
-                      onChange={(e) => setAccessories(prev => ({
-                        ...prev,
-                        [key]: e.target.checked
-                      }))}
-                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                {/* Modeller */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Modeller
+                  </h3>
+                  {!selectedBrandId ? (
+                    <div className="text-gray-500 dark:text-gray-400">
+                      Önce marka seçiniz
+                    </div>
+                  ) : models.length === 0 ? (
+                    <div className="text-gray-500 dark:text-gray-400">
+                      Model bulunamadı
+                    </div>
+                  ) : (
+                    <Dropdown
+                      onChange={(e) => handleModelSelect(e.value.id)}
+                      value={
+                        models.find((b) => b.id === selectedModelId) || null
+                      }
+                      options={models}
+                      optionLabel="name"
+                      placeholder="Model Seçin"
+                      filter
+                      className="w-full"
                     />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                      {key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                    </span>
-                  </label>
-                ))}
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Hasar/Tramer Durumu */}
-          <div className="bg-gray-800/50 rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Hasar/Tramer Durumu</h2>
-            <div className="grid grid-cols-1 gap-6">
-              {Object.entries(damageStatus).map(([key, value]) => {
-                // Türkçe parça isimleri
-                const partNames: {[key: string]: string} = {
-                  'chassis': 'Şasi',
-                  'engine': 'Motor',
-                  'transmission': 'Şanzıman',
-                  'frontFork': 'Ön Amortisör',
-                  'fuelTank': 'Yakıt Deposu',
-                  'electrical': 'Elektrik Sistemi',
-                  'frontPanel': 'Ön Panel',
-                  'rearPanel': 'Arka Panel',
-                  'exhaust': 'Egzoz'
-                };
-                
-                return (
-                  <div key={key} className="grid grid-cols-2 gap-4 items-center">
-                    <span className="text-sm font-medium text-gray-300">
-                      {partNames[key] || key}
-                    </span>
-                    <select
-                      className="rounded-md border border-gray-600 text-white bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={value.status}
-                      onChange={(e) => handleDamageStatusChange(key, e.target.value)}
-                    >
-                      <option value="Orijinal">Orijinal</option>
-                      <option value="Boyalı">Boyalı</option>
-                      <option value="Değişen">Değişen</option>
-                      <option value="Hasarlı">Hasarlı</option>
-                    </select>
+              {/* Arama Filtreleri */}
+              {selectedBrandId && selectedModelId && (
+                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Sahibinden Arama Filtreleri
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5 p-4">
+                    {/* Yıl Min */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Yıl (Min)
+                      </label>
+                      <InputNumber
+                        value={minYear}
+                        onValueChange={(e) => setMinYear(e.value ?? 0)}
+                        min={undefined}
+                        max={currentYear}
+                        useGrouping={false}
+                        placeholder="Min Yıl"
+                        className="w-full"
+                        inputClassName="h-11 px-3 text-sm"
+                      />
+                    </div>
+
+                    {/* Yıl Max */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Yıl (Max)
+                      </label>
+                      <InputNumber
+                        value={maxYear}
+                        onValueChange={(e) => setMaxYear(e.value ?? 0)}
+                        min={undefined}
+                        max={currentYear}
+                        useGrouping={false}
+                        placeholder="Max Yıl"
+                        className="w-full"
+                        inputClassName="h-11 px-3 text-sm"
+                      />
+                    </div>
+
+                    {/* KM Min */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Kilometre (Min)
+                      </label>
+                      <InputNumber
+                        value={minMilage}
+                        onValueChange={(e) => setMinMilage(e.value ?? 0)}
+                        min={undefined}
+                        max={1000000}
+                        mode="decimal"
+                        useGrouping={true}
+                        placeholder="Min KM"
+                        locale="de-DE"
+                        className="w-full"
+                        inputClassName="h-11 px-3 text-sm"
+                      />
+                    </div>
+
+                    {/* KM Max */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Kilometre (Max)
+                      </label>
+                      <InputNumber
+                        value={maxMilage}
+                        onValueChange={(e) => setMaxMilage(e.value ?? 0)}
+                        min={undefined}
+                        max={1000000}
+                        mode="decimal"
+                        useGrouping={true}
+                        placeholder="Max KM"
+                        locale="de-DE"
+                        className="w-full"
+                        inputClassName="h-11 px-3 text-sm"
+                      />
+                    </div>
+
+                    {/* Araç Durumu */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Araç Durumu
+                      </label>
+                      <Dropdown
+                        value={condition}
+                        options={conditionOptions}
+                        onChange={(e) => setCondition(e.value)}
+                        disabled
+                        placeholder="Seçiniz"
+                        className="w-full"
+                        panelClassName="text-sm"
+                      />
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Hesapla Butonu */}
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Hesaplanıyor...</span>
-                </>
-              ) : (
-                <>
-                  <CalcIcon className="h-5 w-5" />
-                  <span>Fiyat Hesapla</span>
-                </>
+                </div>
               )}
-            </button>
+
+              {/* Ara Butonu */}
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={() => getDataFromSahibinden(true)}
+                  disabled={
+                    !selectedBrandId ||
+                    !selectedModelId ||
+                    !minYear ||
+                    !maxYear ||
+                    !minMilage ||
+                    !maxMilage ||
+                    !condition ||
+                    sahibindenLoading
+                  }
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                >
+                  {sahibindenLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Sahibinden'den Çekiliyor...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-5 w-5" />
+                      Fiyat Hesapla
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Seçilen Motor Bilgisi */}
+              {(selectedBrandId || selectedModelId) && (
+                <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <div className="flex justify-between items-center">
+                    <div className="text-gray-900 dark:text-white">
+                      <strong>Seçilen:</strong>{" "}
+                      {brands.find((x) => x.id === selectedBrandId)?.name}{" "}
+                      {models.find((x) => x.id === selectedModelId)?.name}{" "}
+                    </div>
+                    <button
+                      onClick={clearSelection}
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
+                    >
+                      Temizle
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+          {activeIndex === 1 && (
+            <>
+              {/* Fiyat Sonuç Alanı */}
+              <div className="flex items-center justify-end mb-4 mt-7">
+                <Button
+                  label="Kar Hesapla"
+                  icon="pi pi-external-link"
+                  onClick={() => profitCalculationModalType()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                />
+              </div>
+              {/* Tramer/Hasar Bilgileri */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700 mt-7 mb-6">
+                <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">
+                  Sahibinden Ortalama
+                </h3>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {formatCurrency(averages.marketAveragePrice)}
+                </div>
+                <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                  {listingsLength} ilan ortalaması
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center mt-5">
+                <Button
+                  label={
+                    sahibindenLoading
+                      ? "Sahibinden'den Çekiliyor..."
+                      : "Hasar Bilgisi"
+                  }
+                  icon={
+                    sahibindenLoading
+                      ? "pi pi-spinner pi-spin"
+                      : "pi pi-calculator"
+                  }
+                  disabled={sahibindenLoading}
+                  onClick={() =>
+                    sahibindenLoading ? undefined : getDataFromSahibinden(false)
+                  }
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                />
+              </div>
+
+              <div className="mt-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                Fiyatlar {brands.find((x) => x.id === selectedBrandId)?.name}{" "}
+                {models.find((x) => x.id === selectedModelId)?.name} modeli için
+                hesaplanmıştır
+              </div>
+
+              {/* Sahibinden Sonuçlar - Kollaps Buton */}
+              {listings.length > 0 && (
+                <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mt-7">
+                  <button
+                    onClick={() => setShowSimpleList(!showSimpleList)}
+                    className="w-full h-5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    <span>Sahibinden Sonuçlar ({listings.length} ilan)</span>
+                    {showSimpleList ? (
+                      <ChevronUp className="h-3 w-3 ml-2" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3 ml-2" />
+                    )}
+                  </button>
+
+                  {showSimpleList && (
+                    <div className="p-4">
+                      <div className="space-y-3">
+                        {listings.map((listing) => (
+                          <div
+                            key={listing.id}
+                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900 dark:text-white text-sm">
+                                {listing.title}
+                              </div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
+                                {
+                                  brands.find((x) => x.id === selectedBrandId)
+                                    ?.name
+                                }{" "}
+                                {
+                                  models.find((x) => x.id === selectedModelId)
+                                    ?.name
+                                }{" "}
+                                • {listing.year} • {listing.km} km •{" "}
+                                {listing.location}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-green-600 dark:text-green-500 font-semibold text-sm">
+                                {listing.price}
+                              </div>
+                              <a
+                                href={`https://sahibinden.com${listing.link}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                Git
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Sonuç Yoksa */}
+              {showResult && listings.length === 0 && (
+                <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700 text-center">
+                  <div className="text-gray-500 dark:text-gray-400">
+                    <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <h3 className="text-lg font-medium mb-2">
+                      Sonuç Bulunamadı
+                    </h3>
+                    <p className="text-sm">
+                      Arama kriterlerinize uygun ilan bulunamadı. Lütfen
+                      filtrelerinizi gözden geçirin.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+          {activeIndex === 2 && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-7">
+                {Object.entries(damageStatus).map(([key, value]) => {
+                  const partNames: { [key: string]: string } = {
+                    headFairing: "Kafa Grenajı",
+                    bottomFairing: "Alt Grenaj",
+                    leftFairing: "Sol Grenaj",
+                    rightFairing: "Sağ Grenaj",
+                    backFairing: "Arka Grenaj",
+                    fuelTank: "Yakıt Deposu",
+                  };
+
+                  return (
+                    <div key={key} className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {partNames[key] || key}
+                      </label>
+                      <select
+                        value={value.status}
+                        onChange={(e) =>
+                          handleDamageStatusChange(key, e.target.value)
+                        }
+                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="1">Orijinal</option>
+                        <option value="2">Orijinal Değişen</option>
+                        <option value="3">Orijinal Boyalı</option>
+                        <option value="4">Yan Sanayi</option>
+                        <option value="5">Yan Sanayi Boyalı</option>
+                        <option value="6">Hasarlı</option>
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-center mt-5">
+                <Button
+                  label="Tramerli Fiyat Hesapla"
+                  icon="pi pi-calculator"
+                  onClick={calculateDamageStatus}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                />
+              </div>
+            </>
+          )}
+          {activeIndex === 3 && (
+            <>
+              {/* Fiyat Sonuç Alanı */}
+              <div className="flex items-center justify-end mb-4 mt-7">
+                <Button
+                  label="Kar Hesapla"
+                  icon="pi pi-external-link"
+                  onClick={() => profitCalculationModalType()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700">
+                  <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">
+                    Sahibinden Ortalama
+                  </h3>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {formatCurrency(averages.marketAveragePrice)}
+                  </div>
+                  <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                    {listingsLength} ilan ortalaması
+                  </p>
+                </div>
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 text-center border border-orange-200 dark:border-orange-700">
+                  <h3 className="text-lg font-medium text-orange-700 dark:text-orange-300 mb-2">
+                    Algoritma Fiyatı
+                  </h3>
+                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    {formatCurrency(calculatedBrandNewAverages)}
+                  </div>
+                  <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+                    Sistem hesaplaması
+                  </p>
+                </div>
+
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center border-2 border-green-500">
+                  <h3 className="text-lg font-medium text-green-700 dark:text-green-300 mb-2">
+                    Genel Ortalama
+                  </h3>
+                  <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    {formatCurrency(averages.generalAveragePrice)}
+                  </div>
+                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                    Önerilen fiyat
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+      <Dialog
+        draggable={false}
+        header="Kar Hesaplaması"
+        visible={visible}
+        style={{ width: "50vw" }}
+        onHide={handleClose}
+        footer={footerContent}
+        className="p-0"
+      >
+        <div className="p-6 space-y-4">
+          {/* Yüzdelik Girişi */}
+          <div>
+            <label
+              htmlFor="percent"
+              className="block text-sm font-medium text-white-700 dark:text-white-300 mb-2"
+            >
+              Yüzdelik (%)
+            </label>
+            <InputNumber
+              inputId="percent"
+              value={percentage}
+              onValueChange={(e) => setPercentage(e.value || 0)}
+              prefix="%"
+              className="w-full"
+              inputClassName="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            />
           </div>
 
-          {/* Hesaplama Sonucu */}
-          {calculatedPrice !== null && (
-            <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-              <h2 className="text-lg font-semibold text-white mb-4">Hesaplama Sonucu</h2>
-              <div className="text-3xl font-bold text-green-500">
-                {new Intl.NumberFormat('tr-TR', {
-                  style: 'currency',
-                  currency: 'TRY',
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0
-                }).format(calculatedPrice)}
-              </div>
-              <p className="text-gray-400 mt-2">
-                {selectedYear} {selectedBrand} {selectedModel}
+          {/* Hesaplanan Fiyatlar */}
+          {calculatedPrices && (
+            <div className="mt-6 space-y-4">
+              <h3 className="text-lg font-semibold text-white-800 dark:text-white-200">
+                Hesaplanan Fiyatlar
+              </h3>
+
+              {/* Açıklama */}
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Girilen yüzdelik değer doğrultusunda her ortalama fiyat,
+                belirtilen oranda kâr edecek şekilde geriye dönük olarak
+                hesaplanmıştır. Bu sayede ürününüzün, belirlediğiniz kâr marjı
+                ile satıldığında hangi maliyetlerle alınması gerektiğini
+                görebilirsiniz.
               </p>
+
+              {/* Fiyat Kartları */}
+              {!showOnlySahibindenPriceCard ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Sahibinden Ortalama */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700">
+                    <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">
+                      Sahibinden Ortalama
+                    </h3>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {formatCurrency(calculatedPrices.market)}
+                    </div>
+                  </div>
+
+                  {/* Algoritma Ortalama */}
+                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 text-center border border-orange-200 dark:border-orange-700">
+                    <h3 className="text-lg font-medium text-orange-700 dark:text-orange-300 mb-2">
+                      Algoritma Ortalama
+                    </h3>
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                      {formatCurrency(calculatedPrices.algorithm)}
+                    </div>
+                  </div>
+
+                  {/* Genel Ortalama */}
+                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center border-2 border-green-500">
+                    <h3 className="text-lg font-medium text-green-700 dark:text-green-300 mb-2">
+                      Genel Ortalama
+                    </h3>
+                    <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                      {formatCurrency(calculatedPrices.general)}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700">
+                  <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">
+                    Sahibinden Ortalama
+                  </h3>
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {formatCurrency(calculatedPrices.market)}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </form>
-      </div>
+        </div>
+      </Dialog>
     </div>
   );
 }
