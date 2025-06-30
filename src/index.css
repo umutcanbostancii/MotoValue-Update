@@ -1,7 +1,329 @@
-@import "primereact/resources/themes/lara-dark-blue/theme.css";
+@import "primereact/resources/themes/lara-light-blue/theme.css";
 @import "primereact/resources/primereact.min.css";
 @import "primeicons/primeicons.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom glass effect styles for PrimeReact components */
+.p-dropdown {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 16px !important;
+}
+
+.p-dropdown:not(.p-disabled):hover {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.p-dropdown:not(.p-disabled).p-focus {
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-dropdown .p-dropdown-label {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.p-dropdown .p-dropdown-label.p-placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.p-dropdown-panel {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 16px !important;
+}
+
+/* Dropdown filter search input - More specific selectors */
+.p-dropdown-panel .p-dropdown-filter-container {
+  background: transparent !important;
+  border: none !important;
+  padding: 8px !important;
+}
+
+.p-dropdown-panel .p-dropdown-filter-container .p-inputtext,
+.p-dropdown-panel .p-dropdown-filter {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 12px !important;
+  margin: 4px !important;
+  width: calc(100% - 8px) !important;
+}
+
+.p-dropdown-panel .p-dropdown-filter-container .p-inputtext:focus,
+.p-dropdown-panel .p-dropdown-filter:focus {
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.p-dropdown-panel .p-dropdown-filter-container .p-inputtext::placeholder,
+.p-dropdown-panel .p-dropdown-filter::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.p-dropdown-panel .p-dropdown-filter-icon {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Additional overrides for stubborn elements */
+.p-dropdown-filter-container input[type="text"] {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 12px !important;
+}
+
+.p-dropdown-filter-container input[type="text"]:focus {
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* PrimeReact lara-light-blue theme override - Correct specificity */
+
+/* Dropdown filter input - Tam PrimeReact selector yapısı */
+.p-component.p-dropdown .p-dropdown-panel .p-dropdown-filter.p-inputtext {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 12px !important;
+}
+
+.p-component.p-dropdown .p-dropdown-panel .p-dropdown-filter.p-inputtext:focus {
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.p-component.p-dropdown .p-dropdown-panel .p-dropdown-filter.p-inputtext::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.p-dropdown-items .p-dropdown-item {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.p-dropdown-items .p-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.p-dropdown-items .p-dropdown-item.p-highlight {
+  background: rgba(59, 130, 246, 0.3) !important;
+  color: white !important;
+}
+
+.p-inputnumber-input {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 16px !important;
+}
+
+.p-inputnumber-input:focus {
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.p-inputnumber-input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Steps Component - Force Glass Effect */
+.p-steps {
+  background: transparent !important;
+}
+
+.p-steps .p-steps-item {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 24px !important;
+  margin: 8px !important;
+  padding: 16px 24px !important;
+}
+
+.p-steps .p-steps-item .p-steps-number {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 50% !important;
+}
+
+.p-steps .p-steps-item.p-highlight {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(96, 165, 250, 0.4) !important;
+}
+
+.p-steps .p-steps-item.p-highlight .p-steps-number {
+  background: rgba(59, 130, 246, 0.8) !important;
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  color: white !important;
+}
+
+.p-steps .p-steps-item .p-steps-title {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 600 !important;
+}
+
+.p-steps .p-steps-item .p-menuitem-link {
+  background: transparent !important;
+}
+
+.p-dialog .p-dialog-header {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 24px 24px 0 0 !important;
+}
+
+.p-dialog .p-dialog-content {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  color: white !important;
+}
+
+.p-dialog .p-dialog-footer {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 0 0 24px 24px !important;
+}
+
+.p-dialog-title {
+  color: white !important;
+}
+
+.p-dialog {
+  border-radius: 24px !important;
+  overflow: hidden !important;
+}
+
+.p-button {
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8)) !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 16px !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.p-button:hover {
+  background: linear-gradient(to right, rgba(37, 99, 235, 0.9), rgba(126, 34, 206, 0.9)) !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* SweetAlert2 Glass Effect */
+.swal2-popup {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 24px !important;
+  color: white !important;
+}
+
+.swal2-title {
+  color: white !important;
+}
+
+.swal2-content {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.swal2-confirm {
+  background: linear-gradient(to right, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8)) !important;
+  border: none !important;
+  border-radius: 16px !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.swal2-confirm:hover {
+  background: linear-gradient(to right, rgba(37, 99, 235, 0.9), rgba(126, 34, 206, 0.9)) !important;
+  transform: translateY(-1px) !important;
+}
+
+.swal2-backdrop {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Input specific overrides */
+.p-inputtext {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 16px !important;
+}
+
+.p-inputtext:focus {
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
+}
+
+.p-inputtext::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Specific for dropdown filter inputs */
+.p-dropdown-panel .p-inputtext {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 12px !important;
+}
+
+.p-dropdown-panel .p-inputtext:focus {
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2) !important;
+}
+
+/* Overlay panel fixes */
+.p-overlaypanel {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 16px !important;
+}
+
+.p-overlaypanel .p-overlaypanel-content {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Select options styling */
+option {
+  background: rgba(30, 30, 30, 0.95) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Dark scrollbar for glass effect */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-white/10;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-white/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-white/50;
+}

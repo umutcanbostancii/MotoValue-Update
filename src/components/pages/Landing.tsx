@@ -35,7 +35,7 @@ export function Landing() {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <Bike className="h-8 w-8 text-indigo-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">MotoValue</span>
+              <span className="ml-2 text-xl font-bold text-gray-900">MotorDegerle</span>
             </div>
             <div className="flex items-center space-x-4">
               <Link
@@ -81,7 +81,7 @@ export function Landing() {
                   <span className="block text-indigo-400">Gerçek Değerini Öğrenin</span>
                 </h1>
                 <p className="mt-3 text-base text-gray-300 sm:mt-5 sm:text-lg sm:max-w-xl md:mt-5 md:text-xl">
-                  MotoValue, Türkiye'nin en kapsamlı motosiklet değerleme platformu. 
+                  MotorDegerle, Türkiye'nin en kapsamlı motosiklet değerleme platformu. 
                   Gelişmiş algoritması ve geniş veri tabanı ile motosikletinizin 
                   gerçek piyasa değerini saniyeler içinde öğrenin.
                 </p>
@@ -124,7 +124,7 @@ export function Landing() {
               Özellikler
             </h2>
             <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Neden MotoValue?
+              Neden MotorDegerle?
             </p>
           </div>
 

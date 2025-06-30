@@ -1,4 +1,4 @@
-import { Bell, User, LogOut } from 'lucide-react';
+import { Bell, User, LogOut, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,7 +7,11 @@ interface Notification {
   date: string;
 }
 
-export function TopBar() {
+interface TopBarProps {
+  onToggleSidebar: () => void;
+}
+
+export function TopBar({ onToggleSidebar }: TopBarProps) {
   const [notifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
@@ -17,18 +21,26 @@ export function TopBar() {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <header className="bg-white/8 backdrop-blur-2xl border-b border-white/15 shadow-lg">
       <div className="px-4 py-3 flex items-center justify-between">
-        <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-            MotoValue
+        <div className="flex items-center space-x-3">
+          {/* Hamburger Menu - Mobile Only */}
+          <button
+            onClick={onToggleSidebar}
+            className="p-2 rounded-2xl text-white/80 hover:bg-white/10 lg:hidden transition-all duration-200"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          
+          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+            MotorDegerle
           </h1>
         </div>
         <div className="flex items-center space-x-4">
           <div className="relative group">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 relative"
+              className="p-2 text-white/80 hover:text-white relative transition-all duration-200 hover:bg-white/10 rounded-2xl"
             >
               <Bell className="h-6 w-6" />
               {notifications.length > 0 && (
@@ -36,13 +48,13 @@ export function TopBar() {
               )}
             </button>
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+              <div className="absolute right-0 mt-2 w-80 bg-white/10 backdrop-blur-2xl rounded-3xl shadow-lg border border-white/20 z-50">
                 <div className="p-4">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-medium text-white mb-2">
                     Bildirimler
                   </h3>
                   {notifications.length === 0 ? (
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-white/70">
                       Yeni bildirim bulunmuyor
                     </p>
                   ) : (
@@ -50,12 +62,12 @@ export function TopBar() {
                       {notifications.map((notification, index) => (
                         <div
                           key={index}
-                          className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded"
+                          className="p-2 hover:bg-white/10 rounded-2xl transition-all duration-200"
                         >
-                          <p className="text-sm text-gray-900 dark:text-white">
+                          <p className="text-sm text-white">
                             {notification.message}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-xs text-white/70">
                             {notification.date}
                           </p>
                         </div>
@@ -67,16 +79,16 @@ export function TopBar() {
             )}
           </div>
           <div className="relative group">
-            <button className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <User className="h-6 w-6 text-gray-400 dark:text-gray-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <button className="flex items-center space-x-3 p-2 rounded-2xl hover:bg-white/10 transition-all duration-200">
+              <User className="h-6 w-6 text-white/80" />
+              <span className="text-sm font-medium text-white/90">
                 Test Kullanıcı
               </span>
             </button>
-            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 hidden group-hover:block z-50">
+            <div className="absolute right-0 mt-2 w-48 bg-white/10 backdrop-blur-2xl rounded-3xl shadow-lg border border-white/20 hidden group-hover:block z-50">
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-400 hover:bg-white/10 rounded-3xl transition-all duration-200"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Çıkış Yap</span>

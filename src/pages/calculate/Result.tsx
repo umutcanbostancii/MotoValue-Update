@@ -158,7 +158,7 @@ export default function CalculationResultPage() {
     // Logo ve başlık
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("MotoValue Değerleme Raporu", 105, 20, { align: "center" });
+          doc.text("MotorDegerle Değerleme Raporu", 105, 20, { align: "center" });
     
     // Tarih
     doc.setFontSize(10);
@@ -319,11 +319,11 @@ export default function CalculationResultPage() {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(9);
     doc.setFont("helvetica", "italic");
-    doc.text("Bu rapor MotoValue tarafından otomatik olarak oluşturulmuştur.", 105, 280, { align: "center" });
-    doc.text("© 2024 MotoValue - Tüm Hakları Saklıdır", 105, 285, { align: "center" });
+          doc.text("Bu rapor MotorDegerle tarafından otomatik olarak oluşturulmuştur.", 105, 280, { align: "center" });
+      doc.text("© 2024 MotorDegerle - Tüm Hakları Saklıdır", 105, 285, { align: "center" });
     
     // PDF'i kaydet
-    doc.save(`MotoValue_${result.motorcycle_details?.brand}_${result.motorcycle_details?.model}_${today.replace(/\//g, '-')}.pdf`);
+          doc.save(`MotorDegerle_${result.motorcycle_details?.brand}_${result.motorcycle_details?.model}_${today.replace(/\//g, '-')}.pdf`);
   };
 
   return (

@@ -46,7 +46,7 @@ export default function Login() {
             Giriş Yap
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
-            MotoValue sistemine hoş geldiniz
+            MotorDegerle sistemine hoş geldiniz
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>

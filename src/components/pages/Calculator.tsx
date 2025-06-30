@@ -104,6 +104,8 @@ export function Calculator() {
     fetchBrands();
   }, []);
 
+
+
   useEffect(() => {
     if (!connection) return;
 
@@ -374,18 +376,18 @@ export function Calculator() {
   };
 
   return (
-    <div className="p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8">
         {/* Breadcrumb Navigation */}
-        <div className="bg-gray-50 dark:bg-gray-800/30 rounded-lg px-4 py-2 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-            <Home className="h-4 w-4" />
-            <ChevronRight className="h-4 w-4" />
+        <div className="bg-white/8 backdrop-blur-2xl rounded-3xl px-2 sm:px-4 py-2 border border-white/15 shadow-lg">
+          <div className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-white/80 overflow-x-auto">
+            <Home className="h-4 w-4 text-white/70" />
+            <ChevronRight className="h-4 w-4 text-white/70" />
             <span>Fiyat Hesapla</span>
             {selectedBrandId && (
               <>
-                <ChevronRight className="h-4 w-4" />
-                <span className="text-gray-900 dark:text-white font-medium">
+                <ChevronRight className="h-4 w-4 text-white/70" />
+                <span className="text-white font-medium">
                   {brands.find((brand) => brand.id === selectedBrandId)?.name ||
                     "Marka Seçin"}
                 </span>
@@ -393,8 +395,8 @@ export function Calculator() {
             )}
             {selectedModelId && (
               <>
-                <ChevronRight className="h-4 w-4" />
-                <span className="text-gray-900 dark:text-white font-medium">
+                <ChevronRight className="h-4 w-4 text-white/70" />
+                <span className="text-white font-medium">
                   {models.find((model) => model.id === selectedModelId)?.name ||
                     "Model Seçin"}
                 </span>
@@ -406,20 +408,20 @@ export function Calculator() {
               minYear ||
               maxYear) && (
               <>
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4 text-white/70" />
                 <div className="flex items-center space-x-2">
                   {condition && (
-                    <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 px-2 py-1 rounded text-xs">
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
                       {condition}
                     </span>
                   )}
                   {minMilage && maxMilage && (
-                    <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 px-2 py-1 rounded text-xs">
+                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
                       {`${minMilage}-${maxMilage}`}
                     </span>
                   )}
                   {minYear && maxYear && (
-                    <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300 px-2 py-1 rounded text-xs">
+                    <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">
                       {`${minYear}-${maxYear}`}
                     </span>
                   )}
@@ -429,13 +431,13 @@ export function Calculator() {
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
-          <CalculatorIcon className="h-6 w-6 inline-block mr-2" />
+        <h1 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-8">
+          <CalculatorIcon className="h-5 w-5 sm:h-6 sm:w-6 inline-block mr-2 text-blue-300" />
           Fiyat Hesapla
         </h1>
 
         {/* Marka/Model/Alt Model Seçimi */}
-        <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <div className="bg-white/8 backdrop-blur-2xl rounded-3xl p-4 sm:p-6 border border-white/15 shadow-lg">
           <Steps
             model={stepperItems}
             activeIndex={activeIndex}
@@ -444,16 +446,16 @@ export function Calculator() {
           />
           {activeIndex === 0 && (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-7">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-7">
                 {/* Markalar */}
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
                     Markalar
                   </h3>
 
                   {loading ? (
-                    <div className="text-gray-500 dark:text-gray-400">
+                    <div className="text-white/70">
                       Yükleniyor...
                     </div>
                   ) : (
@@ -473,15 +475,15 @@ export function Calculator() {
 
                 {/* Modeller */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
                     Modeller
                   </h3>
                   {!selectedBrandId ? (
-                    <div className="text-gray-500 dark:text-gray-400">
+                    <div className="text-white/70">
                       Önce marka seçiniz
                     </div>
                   ) : models.length === 0 ? (
-                    <div className="text-gray-500 dark:text-gray-400">
+                    <div className="text-white/70">
                       Model bulunamadı
                     </div>
                   ) : (
@@ -502,15 +504,15 @@ export function Calculator() {
 
               {/* Arama Filtreleri */}
               {selectedBrandId && selectedModelId && (
-                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-white/8 backdrop-blur-2xl rounded-3xl border border-white/15 shadow-lg">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
                     Sahibinden Arama Filtreleri
                   </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-5 p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-5 p-2 sm:p-4">
                     {/* Yıl Min */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2">
                         Yıl (Min)
                       </label>
                       <InputNumber
@@ -521,13 +523,13 @@ export function Calculator() {
                         useGrouping={false}
                         placeholder="Min Yıl"
                         className="w-full"
-                        inputClassName="h-11 px-3 text-sm"
+                        inputClassName="h-10 sm:h-11 px-2 sm:px-3 text-xs sm:text-sm"
                       />
                     </div>
 
                     {/* Yıl Max */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2">
                         Yıl (Max)
                       </label>
                       <InputNumber
@@ -538,13 +540,13 @@ export function Calculator() {
                         useGrouping={false}
                         placeholder="Max Yıl"
                         className="w-full"
-                        inputClassName="h-11 px-3 text-sm"
+                        inputClassName="h-10 sm:h-11 px-2 sm:px-3 text-xs sm:text-sm"
                       />
                     </div>
 
                     {/* KM Min */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2">
                         Kilometre (Min)
                       </label>
                       <InputNumber
@@ -557,13 +559,13 @@ export function Calculator() {
                         placeholder="Min KM"
                         locale="de-DE"
                         className="w-full"
-                        inputClassName="h-11 px-3 text-sm"
+                        inputClassName="h-10 sm:h-11 px-2 sm:px-3 text-xs sm:text-sm"
                       />
                     </div>
 
                     {/* KM Max */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2">
                         Kilometre (Max)
                       </label>
                       <InputNumber
@@ -576,13 +578,13 @@ export function Calculator() {
                         placeholder="Max KM"
                         locale="de-DE"
                         className="w-full"
-                        inputClassName="h-11 px-3 text-sm"
+                        inputClassName="h-10 sm:h-11 px-2 sm:px-3 text-xs sm:text-sm"
                       />
                     </div>
 
                     {/* Araç Durumu */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-white/90 mb-1 sm:mb-2">
                         Araç Durumu
                       </label>
                       <Dropdown
@@ -600,7 +602,7 @@ export function Calculator() {
               )}
 
               {/* Ara Butonu */}
-              <div className="mt-6 flex justify-center">
+              <div className="mt-4 sm:mt-6 flex justify-center">
                 <button
                   onClick={() => getDataFromSahibinden(true)}
                   disabled={
@@ -613,7 +615,7 @@ export function Calculator() {
                     !condition ||
                     sahibindenLoading
                   }
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                  className="bg-gradient-to-r from-blue-500/80 to-purple-600/80 hover:from-blue-600/90 hover:to-purple-700/90 disabled:bg-gray-400/50 disabled:cursor-not-allowed text-white px-4 sm:px-8 py-2 sm:py-3 rounded-2xl text-sm sm:text-base font-medium transition-all duration-200 flex items-center gap-2 backdrop-blur-2xl shadow-lg hover:shadow-xl"
                 >
                   {sahibindenLoading ? (
                     <>
@@ -631,16 +633,16 @@ export function Calculator() {
 
               {/* Seçilen Motor Bilgisi */}
               {(selectedBrandId || selectedModelId) && (
-                <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                <div className="mt-4 p-4 bg-white/8 backdrop-blur-2xl rounded-3xl border border-white/15 shadow-lg">
                   <div className="flex justify-between items-center">
-                    <div className="text-gray-900 dark:text-white">
+                    <div className="text-white">
                       <strong>Seçilen:</strong>{" "}
                       {brands.find((x) => x.id === selectedBrandId)?.name}{" "}
                       {models.find((x) => x.id === selectedModelId)?.name}{" "}
                     </div>
                     <button
                       onClick={clearSelection}
-                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
+                      className="text-white/70 hover:text-white transition-colors"
                     >
                       Temizle
                     </button>
@@ -661,14 +663,14 @@ export function Calculator() {
                 />
               </div>
               {/* Tramer/Hasar Bilgileri */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700 mt-7 mb-6">
-                <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">
+              <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-2xl rounded-3xl p-4 text-center border border-blue-300/30 shadow-lg mt-7 mb-6">
+                <h3 className="text-lg font-medium text-blue-200 mb-2">
                   Sahibinden Ortalama
                 </h3>
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <div className="text-2xl font-bold text-blue-100">
                   {formatCurrency(averages.marketAveragePrice)}
                 </div>
-                <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                <p className="text-sm text-blue-200 mt-1">
                   {listingsLength} ilan ortalaması
                 </p>
               </div>
@@ -689,11 +691,11 @@ export function Calculator() {
                   onClick={() =>
                     sahibindenLoading ? undefined : getDataFromSahibinden(false)
                   }
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                  className="bg-gradient-to-r from-blue-500/80 to-purple-600/80 hover:from-blue-600/90 hover:to-purple-700/90 disabled:bg-gray-400/50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-2xl font-medium transition-all duration-200 flex items-center gap-2 backdrop-blur-2xl shadow-lg hover:shadow-xl"
                 />
               </div>
 
-              <div className="mt-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+              <div className="mt-4 text-center text-white/70 text-sm">
                 Fiyatlar {brands.find((x) => x.id === selectedBrandId)?.name}{" "}
                 {models.find((x) => x.id === selectedModelId)?.name} modeli için
                 hesaplanmıştır
@@ -701,10 +703,10 @@ export function Calculator() {
 
               {/* Sahibinden Sonuçlar - Kollaps Buton */}
               {listings.length > 0 && (
-                <div className="bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mt-7">
+                <div className="bg-white/8 backdrop-blur-2xl rounded-3xl border border-white/15 shadow-lg overflow-hidden mt-7">
                   <button
                     onClick={() => setShowSimpleList(!showSimpleList)}
-                    className="w-full h-5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="w-full h-5 bg-white/10 backdrop-blur-2xl hover:bg-white/15 transition-colors flex items-center justify-center text-sm font-medium text-white/80"
                   >
                     <span>Sahibinden Sonuçlar ({listings.length} ilan)</span>
                     {showSimpleList ? (
@@ -720,13 +722,13 @@ export function Calculator() {
                         {listings.map((listing) => (
                           <div
                             key={listing.id}
-                            className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                            className="flex items-center justify-between p-3 bg-white/8 backdrop-blur-2xl rounded-2xl hover:bg-white/12 transition-colors border border-white/10"
                           >
                             <div className="flex-1">
-                              <div className="font-medium text-gray-900 dark:text-white text-sm">
+                              <div className="font-medium text-white text-sm">
                                 {listing.title}
                               </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">
+                              <div className="text-xs text-white/70">
                                 {
                                   brands.find((x) => x.id === selectedBrandId)
                                     ?.name
@@ -740,14 +742,14 @@ export function Calculator() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              <div className="text-green-600 dark:text-green-500 font-semibold text-sm">
+                              <div className="text-green-400 font-semibold text-sm">
                                 {listing.price}
                               </div>
                               <a
                                 href={`https://sahibinden.com${listing.link}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors"
+                                className="flex items-center gap-1 bg-gradient-to-r from-blue-500/80 to-purple-600/80 hover:from-blue-600/90 hover:to-purple-700/90 text-white px-3 py-1 rounded-2xl text-xs font-medium transition-all duration-200 backdrop-blur-2xl shadow-lg"
                               >
                                 <ExternalLink className="h-3 w-3" />
                                 Git
@@ -763,10 +765,10 @@ export function Calculator() {
 
               {/* Sonuç Yoksa */}
               {showResult && listings.length === 0 && (
-                <div className="bg-white dark:bg-gray-800/50 rounded-lg p-6 border border-gray-200 dark:border-gray-700 text-center">
-                  <div className="text-gray-500 dark:text-gray-400">
+                <div className="bg-white/8 backdrop-blur-2xl rounded-3xl p-6 border border-white/15 shadow-lg text-center">
+                  <div className="text-white/70">
                     <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">
+                    <h3 className="text-lg font-medium mb-2 text-white">
                       Sonuç Bulunamadı
                     </h3>
                     <p className="text-sm">
@@ -780,7 +782,7 @@ export function Calculator() {
           )}
           {activeIndex === 2 && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-7">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-7">
                 {Object.entries(damageStatus).map(([key, value]) => {
                   const partNames: { [key: string]: string } = {
                     headFairing: "Kafa Grenajı",
@@ -793,7 +795,7 @@ export function Calculator() {
 
                   return (
                     <div key={key} className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="block text-sm font-medium text-white/90">
                         {partNames[key] || key}
                       </label>
                       <select
@@ -801,7 +803,7 @@ export function Calculator() {
                         onChange={(e) =>
                           handleDamageStatusChange(key, e.target.value)
                         }
-                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white bg-white dark:bg-gray-700 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-2xl border border-white/20 text-white bg-white/10 backdrop-blur-2xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
                       >
                         <option value="1">Orijinal</option>
                         <option value="2">Orijinal Değişen</option>
@@ -820,7 +822,7 @@ export function Calculator() {
                   label="Tramerli Fiyat Hesapla"
                   icon="pi pi-calculator"
                   onClick={calculateDamageStatus}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                  className="bg-gradient-to-r from-blue-500/80 to-purple-600/80 hover:from-blue-600/90 hover:to-purple-700/90 disabled:bg-gray-400/50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-2xl font-medium transition-all duration-200 flex items-center gap-2 backdrop-blur-2xl shadow-lg hover:shadow-xl"
                 />
               </div>
             </>
@@ -833,42 +835,42 @@ export function Calculator() {
                   label="Kar Hesapla"
                   icon="pi pi-external-link"
                   onClick={() => profitCalculationModalType()}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                  className="bg-gradient-to-r from-blue-500/80 to-purple-600/80 hover:from-blue-600/90 hover:to-purple-700/90 disabled:bg-gray-400/50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-2xl font-medium transition-all duration-200 flex items-center gap-2 backdrop-blur-2xl shadow-lg hover:shadow-xl"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700">
-                  <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-2xl rounded-3xl p-3 sm:p-4 text-center border border-blue-300/30 shadow-lg">
+                  <h3 className="text-sm sm:text-lg font-medium text-blue-200 mb-2">
                     Sahibinden Ortalama
                   </h3>
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-lg sm:text-2xl font-bold text-blue-100">
                     {formatCurrency(averages.marketAveragePrice)}
                   </div>
-                  <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
+                  <p className="text-xs sm:text-sm text-blue-200 mt-1">
                     {listingsLength} ilan ortalaması
                   </p>
                 </div>
-                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 text-center border border-orange-200 dark:border-orange-700">
-                  <h3 className="text-lg font-medium text-orange-700 dark:text-orange-300 mb-2">
+                <div className="bg-gradient-to-br from-orange-500/20 to-pink-500/20 backdrop-blur-2xl rounded-3xl p-3 sm:p-4 text-center border border-orange-300/30 shadow-lg">
+                  <h3 className="text-sm sm:text-lg font-medium text-orange-200 mb-2">
                     Algoritma Fiyatı
                   </h3>
-                  <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  <div className="text-lg sm:text-2xl font-bold text-orange-100">
                     {formatCurrency(calculatedBrandNewAverages)}
                   </div>
-                  <p className="text-sm text-orange-600 dark:text-orange-400 mt-1">
+                  <p className="text-xs sm:text-sm text-orange-200 mt-1">
                     Sistem hesaplaması
                   </p>
                 </div>
 
-                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center border-2 border-green-500">
-                  <h3 className="text-lg font-medium text-green-700 dark:text-green-300 mb-2">
+                <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-2xl rounded-3xl p-3 sm:p-4 text-center border-2 border-green-400/50 shadow-lg">
+                  <h3 className="text-sm sm:text-lg font-medium text-green-200 mb-2">
                     Genel Ortalama
                   </h3>
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                  <div className="text-xl sm:text-3xl font-bold text-green-100">
                     {formatCurrency(averages.generalAveragePrice)}
                   </div>
-                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                  <p className="text-xs sm:text-sm text-green-200 mt-1">
                     Önerilen fiyat
                   </p>
                 </div>
@@ -881,7 +883,7 @@ export function Calculator() {
         draggable={false}
         header="Kar Hesaplaması"
         visible={visible}
-        style={{ width: "50vw" }}
+        style={{ width: window.innerWidth < 640 ? "95vw" : "50vw" }}
         onHide={handleClose}
         footer={footerContent}
         className="p-0"
@@ -891,7 +893,7 @@ export function Calculator() {
           <div>
             <label
               htmlFor="percent"
-              className="block text-sm font-medium text-white-700 dark:text-white-300 mb-2"
+              className="block text-sm font-medium text-white/90 mb-2"
             >
               Yüzdelik (%)
             </label>
@@ -901,19 +903,19 @@ export function Calculator() {
               onValueChange={(e) => setPercentage(e.value || 0)}
               prefix="%"
               className="w-full"
-              inputClassName="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              inputClassName="w-full px-3 py-2 border border-white/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/10 backdrop-blur-2xl text-white"
             />
           </div>
 
           {/* Hesaplanan Fiyatlar */}
           {calculatedPrices && (
             <div className="mt-6 space-y-4">
-              <h3 className="text-lg font-semibold text-white-800 dark:text-white-200">
+              <h3 className="text-lg font-semibold text-white">
                 Hesaplanan Fiyatlar
               </h3>
 
               {/* Açıklama */}
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-white/70">
                 Girilen yüzdelik değer doğrultusunda her ortalama fiyat,
                 belirtilen oranda kâr edecek şekilde geriye dönük olarak
                 hesaplanmıştır. Bu sayede ürününüzün, belirlediğiniz kâr marjı
@@ -923,43 +925,43 @@ export function Calculator() {
 
               {/* Fiyat Kartları */}
               {!showOnlySahibindenPriceCard ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                   {/* Sahibinden Ortalama */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700">
-                    <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">
+                  <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-2xl rounded-3xl p-4 text-center border border-blue-300/30 shadow-lg">
+                    <h3 className="text-lg font-medium text-blue-200 mb-2">
                       Sahibinden Ortalama
                     </h3>
-                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    <div className="text-2xl font-bold text-blue-100">
                       {formatCurrency(calculatedPrices.market)}
                     </div>
                   </div>
 
                   {/* Algoritma Ortalama */}
-                  <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 text-center border border-orange-200 dark:border-orange-700">
-                    <h3 className="text-lg font-medium text-orange-700 dark:text-orange-300 mb-2">
+                  <div className="bg-gradient-to-br from-orange-500/20 to-pink-500/20 backdrop-blur-2xl rounded-3xl p-4 text-center border border-orange-300/30 shadow-lg">
+                    <h3 className="text-lg font-medium text-orange-200 mb-2">
                       Algoritma Ortalama
                     </h3>
-                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                    <div className="text-2xl font-bold text-orange-100">
                       {formatCurrency(calculatedPrices.algorithm)}
                     </div>
                   </div>
 
                   {/* Genel Ortalama */}
-                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center border-2 border-green-500">
-                    <h3 className="text-lg font-medium text-green-700 dark:text-green-300 mb-2">
+                  <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-2xl rounded-3xl p-4 text-center border-2 border-green-400/50 shadow-lg">
+                    <h3 className="text-lg font-medium text-green-200 mb-2">
                       Genel Ortalama
                     </h3>
-                    <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    <div className="text-3xl font-bold text-green-100">
                       {formatCurrency(calculatedPrices.general)}
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center border border-blue-200 dark:border-blue-700">
-                  <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300 mb-2">
+                <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-2xl rounded-3xl p-4 text-center border border-blue-300/30 shadow-lg">
+                  <h3 className="text-lg font-medium text-blue-200 mb-2">
                     Sahibinden Ortalama
                   </h3>
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-2xl font-bold text-blue-100">
                     {formatCurrency(calculatedPrices.market)}
                   </div>
                 </div>

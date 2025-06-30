@@ -27,13 +27,13 @@ const PerformanceDashboard = () => {
   if (!import.meta.env.DEV) return null;
 
   return (
-    <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+    <div className="mt-4 p-3 bg-white/8 backdrop-blur-2xl rounded-3xl border border-white/15 shadow-lg">
       <div className="flex items-center gap-2 mb-2">
-        <Timer className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-        <h3 className="text-xs font-semibold text-gray-800 dark:text-gray-200">Database Performance</h3>
+        <Timer className="w-3 h-3 text-blue-300" />
+        <h3 className="text-xs font-semibold text-white/90">Database Performance</h3>
       </div>
       
-      <div className="text-xs space-y-1 text-gray-700 dark:text-gray-300">
+      <div className="text-xs space-y-1 text-white/80">
         <div className="flex justify-between">
           <span>Toplam Sorgu:</span>
           <span className="font-medium">{report.totalOperations}</span>
@@ -52,15 +52,15 @@ const PerformanceDashboard = () => {
         </div>
         
         {report.totalOperations === 0 ? (
-          <div className="border-t border-gray-300 dark:border-gray-600 pt-1 mt-1 text-center text-gray-500 dark:text-gray-400">
+          <div className="border-t border-white/20 pt-1 mt-1 text-center text-white/60">
             <div className="text-xs">Henüz sorgu yok</div>
             <div className="text-xs">Marka seçin! 🚀</div>
           </div>
         ) : (
           Object.entries(report.operationStats).map(([op, stats]) => (
-            <div key={op} className="border-t border-gray-300 dark:border-gray-600 pt-1 mt-1">
-              <div className="font-medium text-xs truncate" title={op}>{op}</div>
-              <div className="text-gray-500 dark:text-gray-400 text-xs">
+            <div key={op} className="border-t border-white/20 pt-1 mt-1">
+              <div className="font-medium text-xs truncate text-white/90" title={op}>{op}</div>
+              <div className="text-white/60 text-xs">
                 {stats.count} kez • {stats.avgDuration.toFixed(2)}ms
                 {stats.avgDuration < 100 ? ' 🚀' : stats.avgDuration < 300 ? ' ⚡' : ' 🐌'}
               </div>
@@ -72,10 +72,10 @@ const PerformanceDashboard = () => {
       <button 
         onClick={() => performanceMonitor.clearMetrics()}
         disabled={report.totalOperations === 0}
-        className={`mt-2 w-full text-xs px-2 py-1 rounded transition-colors ${
+        className={`mt-2 w-full text-xs px-2 py-1 rounded-2xl transition-all duration-200 ${
           report.totalOperations === 0 
-            ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 cursor-not-allowed' 
-            : 'bg-blue-600 hover:bg-blue-700 text-white'
+            ? 'bg-white/15 text-white/40 cursor-not-allowed' 
+            : 'bg-blue-500/70 hover:bg-blue-500/80 text-white shadow-lg hover:shadow-xl'
         }`}
       >
         {report.totalOperations === 0 ? 'Boş' : 'Temizle'}
@@ -84,31 +84,44 @@ const PerformanceDashboard = () => {
   );
 };
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
 
   return (
-    <div className="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-      <div className="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
-        <Link to="/dashboard" className="flex items-center space-x-2">
-          <Calculator className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-          <span className="text-lg font-semibold text-gray-900 dark:text-white">MotoValue</span>
+    <div className={`flex flex-col w-64 bg-white/8 backdrop-blur-2xl border-r border-white/15 shadow-2xl
+      fixed lg:relative z-50 lg:z-auto h-full transition-transform duration-300 ease-in-out
+      ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      
+      <div className="flex items-center h-16 px-4 border-b border-white/15 bg-white/4 backdrop-blur-2xl">
+        <Link to="/dashboard" className="flex items-center space-x-2 group">
+          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-200">
+            <Calculator className="h-6 w-6 text-white" />
+          </div>
+          <span className="text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+            MotorDegerle
+          </span>
         </Link>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
+      
+      <nav className="flex-1 p-4 space-y-2">
         {navigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
             <Link
               key={item.name}
               to={item.href}
-              className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg ${
+              className={`flex items-center px-4 py-3 text-sm font-medium rounded-2xl transition-all duration-200 ${
                 isActive
-                  ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  ? 'bg-gradient-to-r from-blue-500/70 to-purple-600/70 text-white shadow-lg backdrop-blur-2xl border border-white/25'
+                  : 'text-white/80 hover:bg-white/8 hover:text-white hover:shadow-lg backdrop-blur-2xl border border-transparent hover:border-white/15'
               }`}
             >
-              <item.icon className="h-5 w-5 mr-3" />
+              <item.icon className={`h-5 w-5 mr-3 ${isActive ? 'text-white' : 'text-white/70'}`} />
               {item.name}
             </Link>
           );
