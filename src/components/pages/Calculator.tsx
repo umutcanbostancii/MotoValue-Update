@@ -114,6 +114,8 @@ export function Calculator() {
         return km === 0;
       });
 
+      console.log("Zero KM Listings:", zeroKmListings);
+
       const secondHandListings = listings.filter((listing) => {
         const km = parseInt(listing.km.replace(/\D/g, ""), 10);
         return km > 0;
