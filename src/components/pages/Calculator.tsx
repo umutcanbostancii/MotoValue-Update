@@ -82,6 +82,7 @@ export function Calculator() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [stepBackIndex, setStepBackIndex] = useState(0);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [brandNewAverages, setBrandNewAverages] = useState<number>(0);
   const [initialBrandNewAverages, setInitialBrandNewAverages] =
     useState<number>(0);
@@ -108,28 +109,33 @@ export function Calculator() {
     if (!connection) return;
 
     const handleListings = (listings: Listing[]) => {
-      const allKmBetween0And1000 = listings.every((listing) => {
+      const zeroKmListings = listings.filter((listing) => {
         const km = parseInt(listing.km.replace(/\D/g, ""), 10);
-        return km >= 0 && km <= 1000;
+        return km === 0;
       });
-      const calculatedMarketPrice = calculateMarketPriceAverage(listings);
-      if (allKmBetween0And1000) {
-        console.log(brandNewAverages);
-        console.log(brandNewAverages);
-        setInitialBrandNewAverages(calculatedMarketPrice);
-        setBrandNewAverages(calculatedMarketPrice);
-        setSahibindenLoading(false);
-        setStepBackIndex(2);
-      } else {
-        setListings(listings);
-        setListingsLength(listings.length);
-        setAverages((prev) => ({
-          ...prev,
-          marketAveragePrice: calculatedMarketPrice,
-        }));
-        setSahibindenLoading(false);
-        setStepBackIndex(1);
+
+      const secondHandListings = listings.filter((listing) => {
+        const km = parseInt(listing.km.replace(/\D/g, ""), 10);
+        return km > 0;
+      });
+
+      const calculatedMarketSecondHandPrice =
+        calculateMarketPriceAverage(secondHandListings);
+
+      if (zeroKmListings.length > 0) {
+        const calculatedMarketZeroKmPrice =
+          calculateMarketPriceAverage(zeroKmListings);
+        setInitialBrandNewAverages(calculatedMarketZeroKmPrice);
+        setBrandNewAverages(calculatedMarketZeroKmPrice);
       }
+
+      setListings(secondHandListings);
+      setListingsLength(listings.length);
+      setAverages((prev) => ({
+        ...prev,
+        marketAveragePrice: calculatedMarketSecondHandPrice,
+      }));
+      setSahibindenLoading(false);
 
       nextStep();
     };
@@ -190,7 +196,7 @@ export function Calculator() {
     setSelectedModelId(modelId);
   };
 
-  const getDataFromSahibinden = async (isUsed: boolean) => {
+  const getDataFromSahibinden = async () => {
     if (!connection) {
       console.error("SignalR bağlantısı kurulmadı!");
       return;
@@ -205,8 +211,7 @@ export function Calculator() {
         minYear,
         maxYear,
         `${minMilage}-${maxMilage}`,
-        condition,
-        isUsed
+        condition
       );
     } catch (error) {
       console.error("SignalR isteği hatası:", error);
@@ -401,10 +406,10 @@ export function Calculator() {
               </>
             )}
             {(condition ||
-              (minMilage && minMilage !== 0) ||
-              (maxMilage && maxMilage !== 0) ||
-              minYear ||
-              maxYear) && (
+              (minMilage != null && minMilage > 0) ||
+              (maxMilage != null && maxMilage > 0) ||
+              (minYear != null && minYear > 0) ||
+              (maxYear != null && maxYear > 0)) && (
               <>
                 <ChevronRight className="h-4 w-4" />
                 <div className="flex items-center space-x-2">
@@ -413,16 +418,34 @@ export function Calculator() {
                       {condition}
                     </span>
                   )}
-                  {minMilage && maxMilage && (
+
+                  {(minMilage != null && minMilage > 0) ||
+                  (maxMilage != null && maxMilage > 0) ? (
                     <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 px-2 py-1 rounded text-xs">
-                      {`${minMilage}-${maxMilage}`}
+                      {`${minMilage != null && minMilage > 0 ? minMilage : ""}${
+                        minMilage != null &&
+                        minMilage > 0 &&
+                        maxMilage != null &&
+                        maxMilage > 0
+                          ? "-"
+                          : ""
+                      }${maxMilage != null && maxMilage > 0 ? maxMilage : ""}`}
                     </span>
-                  )}
-                  {minYear && maxYear && (
+                  ) : null}
+
+                  {(minYear != null && minYear > 0) ||
+                  (maxYear != null && maxYear > 0) ? (
                     <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-300 px-2 py-1 rounded text-xs">
-                      {`${minYear}-${maxYear}`}
+                      {`${minYear != null && minYear > 0 ? minYear : ""}${
+                        minYear != null &&
+                        minYear > 0 &&
+                        maxYear != null &&
+                        maxYear > 0
+                          ? "-"
+                          : ""
+                      }${maxYear != null && maxYear > 0 ? maxYear : ""}`}
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </>
             )}
@@ -532,7 +555,9 @@ export function Calculator() {
                       </label>
                       <InputNumber
                         value={maxYear}
-                        onValueChange={(e) => setMaxYear(e.value ?? 0)}
+                        onValueChange={(e) =>
+                          setMaxYear(e.value ?? currentYear)
+                        }
                         min={undefined}
                         max={currentYear}
                         useGrouping={false}
@@ -568,7 +593,7 @@ export function Calculator() {
                       </label>
                       <InputNumber
                         value={maxMilage}
-                        onValueChange={(e) => setMaxMilage(e.value ?? 0)}
+                        onValueChange={(e) => setMaxMilage(e.value ?? 1000000)}
                         min={undefined}
                         max={1000000}
                         mode="decimal"
@@ -602,14 +627,10 @@ export function Calculator() {
               {/* Ara Butonu */}
               <div className="mt-6 flex justify-center">
                 <button
-                  onClick={() => getDataFromSahibinden(true)}
+                  onClick={getDataFromSahibinden}
                   disabled={
                     !selectedBrandId ||
                     !selectedModelId ||
-                    !minYear ||
-                    !maxYear ||
-                    !minMilage ||
-                    !maxMilage ||
                     !condition ||
                     sahibindenLoading
                   }
@@ -675,20 +696,9 @@ export function Calculator() {
 
               <div className="flex items-center justify-center mt-5">
                 <Button
-                  label={
-                    sahibindenLoading
-                      ? "Sahibinden'den Çekiliyor..."
-                      : "Hasar Bilgisi"
-                  }
-                  icon={
-                    sahibindenLoading
-                      ? "pi pi-spinner pi-spin"
-                      : "pi pi-calculator"
-                  }
-                  disabled={sahibindenLoading}
-                  onClick={() =>
-                    sahibindenLoading ? undefined : getDataFromSahibinden(false)
-                  }
+                  label="Hasar Bilgisi"
+                  icon="pi pi-calculator"
+                  onClick={() => setActiveIndex(2)}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-8 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
                 />
               </div>
