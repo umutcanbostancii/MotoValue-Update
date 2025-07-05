@@ -82,7 +82,6 @@ export function Calculator() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [stepBackIndex, setStepBackIndex] = useState(0);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [brandNewAverages, setBrandNewAverages] = useState<number>(0);
   const [initialBrandNewAverages, setInitialBrandNewAverages] =
     useState<number>(0);
@@ -114,12 +113,12 @@ export function Calculator() {
         return km === 0;
       });
 
-      console.log("Zero KM Listings:", zeroKmListings);
-
       const secondHandListings = listings.filter((listing) => {
         const km = parseInt(listing.km.replace(/\D/g, ""), 10);
         return km > 0;
       });
+
+      console.log("BrandNewAverages: ", brandNewAverages);
 
       const calculatedMarketSecondHandPrice =
         calculateMarketPriceAverage(secondHandListings);
