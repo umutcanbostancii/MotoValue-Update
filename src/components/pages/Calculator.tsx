@@ -139,7 +139,7 @@ export function Calculator() {
       }
 
       setListings(secondHandListings);
-      setListingsLength(listings.length);
+      setListingsLength(secondHandListings.length);
       setAverages((prev) => ({
         ...prev,
         marketAveragePrice: calculatedMarketSecondHandPrice,
