@@ -46,10 +46,10 @@ export function Calculator() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
   const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
-  const [minYear, setMinYear] = useState<number | null>(null);
-  const [maxYear, setMaxYear] = useState<number | null>(null);
-  const [minMilage, setMinMilage] = useState<number | null>(null);
-  const [maxMilage, setMaxMilage] = useState<number | null>(null);
+  const [minYear, setMinYear] = useState<number>(0);
+  const [maxYear, setMaxYear] = useState<number>(0);
+  const [minMilage, setMinMilage] = useState<number>(0);
+  const [maxMilage, setMaxMilage] = useState<number>(0);
 
   const [condition, setCondition] = useState<string>("İkinci El");
 
