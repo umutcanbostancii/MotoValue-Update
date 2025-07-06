@@ -82,7 +82,6 @@ export function Calculator() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [stepBackIndex, setStepBackIndex] = useState(0);
 
-  const [brandNewAverages, setBrandNewAverages] = useState<number>(0);
   const [initialBrandNewAverages, setInitialBrandNewAverages] =
     useState<number>(0);
   const [calculatedBrandNewAverages, setCalculatedBrandNewAverages] =
@@ -108,17 +107,15 @@ export function Calculator() {
     if (!connection) return;
 
     const handleListings = (listings: Listing[]) => {
-      const zeroKmListings = listings.filter((listing) => {
-        const km = parseInt(listing.km.replace(/\D/g, ""), 10);
-        return km === 0;
-      });
-
       const secondHandListings = listings.filter((listing) => {
         const km = parseInt(listing.km.replace(/\D/g, ""), 10);
         return km > 0;
       });
 
-      console.log("BrandNewAverages: ", brandNewAverages);
+      const zeroKmListings = listings.filter((listing) => {
+        const km = parseInt(listing.km.replace(/\D/g, ""), 10);
+        return km === 0;
+      });
 
       const calculatedMarketSecondHandPrice =
         calculateMarketPriceAverage(secondHandListings);
@@ -127,7 +124,18 @@ export function Calculator() {
         const calculatedMarketZeroKmPrice =
           calculateMarketPriceAverage(zeroKmListings);
         setInitialBrandNewAverages(calculatedMarketZeroKmPrice);
-        setBrandNewAverages(calculatedMarketZeroKmPrice);
+      }
+
+      if (secondHandListings.length === 0) {
+        setShowResult(false);
+        MySwal.fire({
+          title: "Uyarı",
+          text: "Aranan filtrelerde ilan bulunamadı. Lütfen farklı filtreler deneyin.",
+          icon: "warning",
+          confirmButtonText: "Tamam",
+        });
+        setSahibindenLoading(false);
+        return;
       }
 
       setListings(secondHandListings);
@@ -137,7 +145,7 @@ export function Calculator() {
         marketAveragePrice: calculatedMarketSecondHandPrice,
       }));
       setSahibindenLoading(false);
-
+      setStepBackIndex(1);
       nextStep();
     };
 
