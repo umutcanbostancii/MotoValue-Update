@@ -109,12 +109,12 @@ export function Calculator() {
     const handleListings = (listings: Listing[]) => {
       const secondHandListings = listings.filter((listing) => {
         const km = parseInt(listing.km.replace(/\D/g, ""), 10);
-        return km > 0;
+        return km > 1000;
       });
 
       const zeroKmListings = listings.filter((listing) => {
         const km = parseInt(listing.km.replace(/\D/g, ""), 10);
-        return km === 0;
+        return km >= 0 && km <= 1000;
       });
 
       const calculatedMarketSecondHandPrice =
@@ -212,6 +212,15 @@ export function Calculator() {
     }
 
     try {
+      if (minYear === 0 && maxYear === 0 && maxMilage === 0) {
+        MySwal.fire({
+          title: "Uyarı",
+          text: "Lütfen geçerli bir yıl aralığı ve maksimum kilometre girin.",
+          icon: "warning",
+          confirmButtonText: "Tamam",
+        });
+        return;
+      }
       setSahibindenLoading(true);
       await connection.invoke(
         "RequestScrape",
@@ -567,7 +576,7 @@ export function Calculator() {
                         onValueChange={(e) =>
                           setMaxYear(e.value ?? currentYear)
                         }
-                        min={undefined}
+                        min={0}
                         max={currentYear}
                         useGrouping={false}
                         placeholder="Max Yıl"
@@ -584,7 +593,7 @@ export function Calculator() {
                       <InputNumber
                         value={minMilage}
                         onValueChange={(e) => setMinMilage(e.value ?? 0)}
-                        min={undefined}
+                        min={0}
                         max={1000000}
                         mode="decimal"
                         useGrouping={true}
@@ -602,8 +611,8 @@ export function Calculator() {
                       </label>
                       <InputNumber
                         value={maxMilage}
-                        onValueChange={(e) => setMaxMilage(e.value ?? 1000000)}
-                        min={undefined}
+                        onValueChange={(e) => setMaxMilage(e.value ?? 0)}
+                        min={0}
                         max={1000000}
                         mode="decimal"
                         useGrouping={true}
@@ -640,6 +649,9 @@ export function Calculator() {
                   disabled={
                     !selectedBrandId ||
                     !selectedModelId ||
+                    minYear === 0 ||
+                    maxYear === 0 ||
+                    maxMilage === 0 ||
                     !condition ||
                     sahibindenLoading
                   }
