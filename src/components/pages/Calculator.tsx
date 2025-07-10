@@ -229,7 +229,8 @@ export function Calculator() {
         minYear,
         maxYear,
         `${minMilage}-${maxMilage}`,
-        condition
+        condition,
+        false
       );
     } catch (error) {
       console.error("SignalR isteği hatası:", error);
